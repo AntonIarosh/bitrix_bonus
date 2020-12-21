@@ -17,7 +17,7 @@ $client = HttpClient::create(['http_version' => '2.0']);
 try {
     $core = (new \Bitrix24\SDK\Core\CoreBuilder())
         ->withLogger($log)
-        ->withWebhookUrl('https://b24-ze7zs7.bitrix24.ru/rest/1/zh1zvyl4o3pjbkwv/')
+        ->withWebhookUrl('https://b24-cdukpe.bitrix24.ru/rest/1/o1aiaw6ifekz1ryy/')
         ->build();
 
 

@@ -21,6 +21,9 @@ class ParseNewOrder
     private $orderId;
     private $orderData;
 
+    const DOC_ID_PLACE = 1;
+    const DOC_ID_PLACE_IN_ALL_IFO = 2;
+
     /**
      * ParseNewOrder constructor - Конструктор класса
      * @param int $orderId - идентификатор заказа
@@ -33,29 +36,59 @@ class ParseNewOrder
     }
 
     /**
+     * Задать идентификатор заказа
+     * @param $id - идентификатор заказа
+     */
+    public function setOrderId($id)
+    {
+        $this->orderId = $id;
+    }
+
+    /**
+     * Получить идентификатор заказа
+     * @return - идентификатор заказа
+     */
+    public function getOrdrId()
+    {
+        return $this->orderId;
+    }
+    /**
      * Задать данные заказа
      * @param $orderData - данные заказа
      */
-    function setOrderData($orderData)
+    public function setOrderData($orderData)
     {
         $this->$orderData = $orderData;
     }
 
-    function getOrderData()
+    /**
+     * Получить данные заказа
+     * @return - данные заказа
+     */
+    public function getOrderData()
     {
         return $this->orderData;
     }
 
-    function makeOrderData()
+    /**
+     * Получить из запроса данные и разобрать их
+     * @return array - данные заказа
+     */
+    public function makeOrderData()
     {
         $request = Request::createFromGlobals();
         $data = [];
         $data["DocId"]  = $request->get("document_id");
         //$data["ContentALL"]  = $request->request->all();
-        $data["id"] = $data["DocId"][2];
+
+        $requestParams = explode("_",$data["DocId"][self::DOC_ID_PLACE_IN_ALL_IFO]);
+        $this->setOrderId($requestParams[self::DOC_ID_PLACE]);
+
+        //$data["id"] = $data["DocId"][self::DOC_ID_PLACE_IN_ALL_IFO];
+        $data["id"] = $this->getOrdrId();
         //$data = $_REQUEST;
         /*var_dump($request->getQueryString());
-        $requestParams = explode("&",$request->getQueryString());
+        $requestParams = explode("_",$data["DocId"][2]);
         $data=[];
         foreach ($requestParams as $value) {
             $temp = explode("=", $value);
