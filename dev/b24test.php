@@ -21,12 +21,16 @@ try {
         ->build();
 
 
-    $res = $core->call('user.current');
+    /*$res = $core->call('user.current');
     var_dump($res->getResponseData()->getResult()->getResultData());
     var_dump($res->getResponseData()->getResult()->getResultData()['ID']);
-    var_dump($res->getResponseData()->getResult()->getResultData()['EMAIL']);
 
-    $res = $core->call('crm.deal.get',['ID'=>30]);
+    var_dump($res->getResponseData()->getResult()->getResultData()['EMAIL']);*/
+    $res = $core->call('crm.deal.get',['ID'=>54]);
+    $arrayOrderData = $res->getResponseData()->getResult()->getResultData();
+    print_r($arrayOrderData);
+
+    /*$res = $core->call('crm.deal.get',['ID'=>30]);
     var_dump($res->getResponseData()->getResult()->getResultData());
     $res = $core->call('crm.contact.get',['ID'=>2]);
     var_dump($res->getResponseData()->getResult()->getResultData());
@@ -35,7 +39,7 @@ try {
 
     $mass = $res->getResponseData()->getResult()->getResultData();
 
-    print_r($mass);
+    print_r($mass);*/
 } catch (\Throwable $exception) {
     print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);
     print(sprintf('тип: %s', get_class($exception)) . PHP_EOL);

@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace HttpInterface;
 
 include dirname(__DIR__) . './../vendor/autoload.php';
+require_once 'OrderAllData.php';
 
-use phpDocumentor\Reflection\Types\Array_;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Cookie;
 
 /**
  * Class ParseNewOrder - Обрабатывает сработавший вэбхук и
@@ -29,10 +27,10 @@ class ParseNewOrder
      * @param int $orderId - идентификатор заказа
      * @param array $orderData - данные заказа
      */
-    function __construct($orderData = 0, $orderId = 0)
+public function __construct($orderData = 0, $orderId = 0)
     {
-        $this->$orderId = $orderId;
-        $this->$orderData = $orderData;
+        $this->orderId = $orderId;
+        $this->orderData = $orderData;
     }
 
     /**
@@ -48,7 +46,7 @@ class ParseNewOrder
      * Получить идентификатор заказа
      * @return - идентификатор заказа
      */
-    public function getOrdrId()
+    public function getOrderId()
     {
         return $this->orderId;
     }
@@ -58,7 +56,7 @@ class ParseNewOrder
      */
     public function setOrderData($orderData)
     {
-        $this->$orderData = $orderData;
+        $this->orderData = $orderData;
     }
 
     /**
@@ -78,22 +76,24 @@ class ParseNewOrder
     {
         $request = Request::createFromGlobals();
         $data = [];
+
         $data["DocId"]  = $request->get("document_id");
         //$data["ContentALL"]  = $request->request->all();
+        $data["id"] = $data["DocId"][2];
 
         $requestParams = explode("_",$data["DocId"][self::DOC_ID_PLACE_IN_ALL_IFO]);
         $this->setOrderId($requestParams[self::DOC_ID_PLACE]);
+        $data["id"] = $this->getOrderId();
 
-        //$data["id"] = $data["DocId"][self::DOC_ID_PLACE_IN_ALL_IFO];
-        $data["id"] = $this->getOrdrId();
-        //$data = $_REQUEST;
-        /*var_dump($request->getQueryString());
-        $requestParams = explode("_",$data["DocId"][2]);
-        $data=[];
-        foreach ($requestParams as $value) {
-            $temp = explode("=", $value);
-            $data[$temp[0]] = $temp[1];
-        }*/
+        $allOrderData = new OrderAllData($this->getOrderId());
+        $allOrderData->allOrderData();
+        $data["ID_CLIENT"] = $allOrderData->getIdOrderOvner();
+        $data["ID_STAGE"] = $allOrderData->getStage();
+        $data["Products"] = $allOrderData->getProducts();
+        $data["All_client_INFO"] = $allOrderData->getClientData();
+        $data["PRICE_ORDER"] = $allOrderData->getOpportunity();
+        $data["СКИДКА"] = $allOrderData->getOpportunity()/100*30;
+
         print_r($data);
         return $data;
     }
