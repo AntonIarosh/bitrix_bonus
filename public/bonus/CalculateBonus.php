@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HttpInterface;
+namespace bonus;
 
 include dirname(__DIR__) . './../vendor/autoload.php';
 
@@ -16,12 +16,14 @@ use Monolog\Handler\StreamHandler;
  */
 class CalculateBonus
 {
-    private $idOvner;
+    private $idOwner;
     private $clientData;
     private $products;
     private $opportunity;
     private $orderId;
     private $bonusValue;
+
+    private $discaountPersentage;
 
     private $log;
     private $client;
@@ -59,6 +61,24 @@ class CalculateBonus
     }
 
     /**
+     * Получить процент максимальной скидки
+     * @return - процент максимальной скидки
+     */
+    public function getDiscaountPersentage()
+    {
+        return $this->discaountPersentage;
+    }
+
+    /**
+     * Установить процент максимальной скидки
+     * @param $discaountPersentage - процент максимальной скидки
+     */
+    public function setDiscaountPersentage($discaountPersentage)
+    {
+        $this->discaountPersentage = $discaountPersentage;
+    }
+
+    /**
      * Задать количество бонусов.
      * @param $bonusValue - стадия заказа
      */
@@ -80,18 +100,18 @@ class CalculateBonus
      * Задать идентификатор заказчика
      * @param $idOvner - идентификатор заказчика
      */
-    public function setIdOrderOvner($idOvner)
+    public function setIdOrderOwner($idOwner)
     {
-        $this->idOvner = $idOvner;
+        $this->idOwner = $idOwner;
     }
 
     /**
      * Получить идентификатор заказчика
      * @return - идентификатор заказчика
      */
-    public function getIdOrderOvner()
+    public function getIdOrderOwner()
     {
-        return $this->idOvner;
+        return $this->idOwner;
     }
 
     /**
@@ -149,9 +169,9 @@ class CalculateBonus
     }
 
     /**
-     * Получить из запроса данные и разобрать их
+     * Расчитать и выполнить скидку на заказ
      */
-    public function allOrderData()
+    public function calculateAndDiscount()
     {
         try {
             $core = (new \Bitrix24\SDK\Core\CoreBuilder())
@@ -176,26 +196,37 @@ class CalculateBonus
             $res = $core->call('crm.deal.productrows.get',['ID' => $this->orderId]);
             $this->setProducts($res->getResponseData()->getResult()->getResultData());
             var_dump($this->getProducts());*/
+            $remains = 0;
+            $allDiscount = 0;
+            $discount = $this->getOpportunity()/100 * $this->getDiscaountPersentage();
+            if ($discount < $this->getBonus()) {
+                $remains = $this->getBonus() - $discount;
+                $allDiscount = $discount;
+            } else {
+                $allDiscount = $this->getBonus();
+            }
             $productsInfo = [];
-            $discountForOnePosition = $this->getBonus()/count($this->getProducts());
-
-            $ostatok = 0;
+            $discountForOnePosition = $allDiscount/count($this->getProducts());
             $tablePart = [];
             foreach ($this->getProducts() as $position) {
                // $productsInfo[$discountForOnePosition] = $position['QUANTITY'];
                 $pOld = $position['PRICE'];
                 if ($pOld < $discountForOnePosition) {
-                    $ostatok += $discountForOnePosition - $pOld;
+                    $remains += $discountForOnePosition - $pOld;
+                    $position['DISCOUNT_SUM'] = $pOld / $position['QUANTITY'];
+                } else {
                     $position['DISCOUNT_SUM'] = $discountForOnePosition / $position['QUANTITY'];
                 }
                 $tablePart[] = $position;
             }
-
+            $res = $core->call('crm.deal.productrows.set',['ID'=> $this->getOrderId(), 'ROWS'=> [$tablePart]]);
+            return $remains;
 
         } catch (\Throwable $exception) {
             print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);
             print(sprintf('тип: %s', get_class($exception)) . PHP_EOL);
             print(sprintf('trace: %s', $exception->getTraceAsString()) . PHP_EOL);
+            return $exception->getMessage();
         }
     }
 }

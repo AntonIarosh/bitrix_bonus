@@ -8,3 +8,4 @@ $pdo = $connection->getPDO();
 $ver = $pdo->query($query);
 $versions = $ver->fetch();
 echo $versions['VERSION'];
+print_r($connection->getTables());
