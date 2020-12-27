@@ -25,12 +25,13 @@ $log->pushProcessor(new \Monolog\Processor\IntrospectionProcessor());
 
 print('<pre>');
 var_dump('hello 1111111');
-error_reporting(E_ALL);
-ini_set('error_reporting', 'E_ALL');
-ini_set('error_log', 'log.txt'); // расположение лог-файла ошибок
-ini_set('log_errors', 'true'); // включить лог ошибок
-error_log('Hello, errors!'); // записать в лог-файл значение/строку
 
+error_reporting(E_ALL);
+var_dump(ini_set('error_reporting', 'E_ALL'));
+var_dump(ini_set('log_errors', '1')); // включить лог ошибок
+var_dump(ini_set('error_log', __DIR__.'/log.txt')); // расположение лог-файла ошибок
+error_log('Hello, errors!'); // записать в лог-файл значение/строку
+//phpinfo();
 $order = new ParseNewOrder();
 $dataRequest = $order->makeOrderData();
 
@@ -98,13 +99,21 @@ switch ($dataRequest['ID_STAGE']) {
                     [
                         'Максимальная скидка - ' => $discountPersent,
                     ]);
+
+        if (class_exists('CalculateBonus')){
+            $log->debug("Класс CalculateBonus");
+        } else {
+            $log->debug("Нет класса CalculateBonus");
+        }
+
         $stage = $person->setStage($dataRequest['id'], $dataRequest['ID_STAGE']);
+
         $log->debug('Этап установлен - ',
                     [
                         'Этап установлен - ' => $stage,
                     ]);
 
-
+        $log->debug("Начинается вычисление и начисление бонусов :");
         $bonusCalculator = new CalculateBonus($dataRequest['id']);
         $bonusCalculator->setOpportunity($dataRequest['PRICE_ORDER']);
         $bonusCalculator->setBonus($respons);
@@ -159,7 +168,7 @@ switch ($dataRequest['ID_STAGE']) {
         }
         $log->debug('Завершение сделки без начисления - ',
                     [
-                        'Завершение сделки без начисления - ' => $dataRequest['id'],
+                        'Завершение сделки без начисления - ID ' => $dataRequest['id'],
                     ]);
 
         break;

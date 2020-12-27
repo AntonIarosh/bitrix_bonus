@@ -8,6 +8,7 @@ include dirname(__DIR__) . './../vendor/autoload.php';
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use PDO;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -29,7 +30,7 @@ class Query
      * ParseNewOrder constructor - Конструктор класса
      * @param $conection - соединение с базой данных
      */
-    public function __construct($conection)
+    public function __construct(PDO $conection)
     {
         $this->conection = $conection;
        /* $this->log = new Logger('name');
@@ -71,7 +72,11 @@ class Query
             $query = "INSERT INTO `bonusbase`.`bonus` (`id_person`,`bonus_discount`,`id_discound_persentage`) VALUES (:idOwner, :bonus_discount, '2');";
             $response = $this->conection->prepare($query);
             $response->execute(['idOwner' => $idOwner, 'bonus_discount' => self::BONUS_FOR_NEW_OWNER]);
-            return $response->fetch();
+            if ($response) {
+                return "Добавлено";
+            } else {
+                return "Не добавлено";
+            }
         } catch (PDOException $e) {
             return $e->getMessage();
             //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
@@ -92,7 +97,11 @@ class Query
             $query = "INSERT INTO `bonusbase`.`date` (`id_person`,`type_action`,`date_action`) VALUES (:idOwner, :typeAction, :date);";
             $response = $this->conection->prepare($query);
             $response->execute(['idOwner' => $idOwner, 'typeAction' => $typeAction, 'date' => $today]);
-            return $response->fetch();
+            if ($response) {
+                return "Добавлено";
+            } else {
+                return "Не добавлено";
+            }
         } catch (PDOException $e) {
             return $e->getMessage();
             //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
@@ -172,7 +181,11 @@ class Query
             $query = "INSERT INTO `bonusbase`.`stage` (`id_deal`,`bonus_stage`) VALUES (:id_deal, :stage);";
             $response = $this->conection->prepare($query);
             $response->execute(['id_deal' => $id_deal, 'stage' => $stage]);
-            return $response->fetch();
+            if ($response) {
+                return "Добавлено";
+            } else {
+                return "Не добавлено";
+            }
         } catch (PDOException $e) {
             return $e->getMessage();
             //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);

@@ -9,6 +9,7 @@ include dirname(__DIR__) . './../vendor/autoload.php';
 use Monolog\Logger;
 use Symfony\Component\HttpClient\HttpClient;
 use Monolog\Handler\StreamHandler;
+use Monolog\Handler\FirePHPHandler;
 
 /**
  * Class CalculateBonus - выполняют расчёт и выполнение скидки.
@@ -35,10 +36,11 @@ class CalculateBonus
     public function __construct($orderId)
     {
         $this->orderId = $orderId;
-        $this->log = new Logger('name');
-        $this->log->pushHandler(new StreamHandler('logs/b24-api-client-debug.log', Logger::DEBUG));
+        $this->log = new Logger('bonus');
+        $this->log->pushHandler(new StreamHandler(__DIR__.'/my_app.log', Logger::DEBUG));
+        $this->log->pushHandler(new FirePHPHandler());
         $this->log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
-
+        $this->log->info('My logger is now ready');
         $this->client = HttpClient::create(['http_version' => '2.0']);
     }
 
@@ -207,6 +209,13 @@ class CalculateBonus
             }
             $productsInfo = [];
             $discountForOnePosition = $allDiscount/count($this->getProducts());
+
+            $this->log->debug('Исходные данные - ',
+                              [
+                                  'Исходные данные - ' => $this->getProducts(),
+                              ]);
+
+
             $tablePart = [];
             foreach ($this->getProducts() as $position) {
                // $productsInfo[$discountForOnePosition] = $position['QUANTITY'];
@@ -214,12 +223,23 @@ class CalculateBonus
                 if ($pOld < $discountForOnePosition) {
                     $remains += $discountForOnePosition - $pOld;
                     $position['DISCOUNT_SUM'] = $pOld / $position['QUANTITY'];
+                    $position['PRICE_EXCLUSIVE'] = $pOld - $position['DISCOUNT_SUM'];
+
+                    /*$position['PRICE_NETTO'] = $pOld - $position['DISCOUNT_SUM'];
+                    $position['PRICE_BRUTTO'] = $pOld - $position['DISCOUNT_SUM'];
+                    $position['PRICE_ACCOUNT'] = $pOld - $position['DISCOUNT_SUM'];*/
                 } else {
                     $position['DISCOUNT_SUM'] = $discountForOnePosition / $position['QUANTITY'];
+                    $position['PRICE_EXCLUSIVE'] = $pOld - $position['DISCOUNT_SUM'];
                 }
+                //$res = $core->call('crm.deal.productrows.set',['ID'=> $this->getOrderId(), 'ROWS'=> [$tablePart]]);
                 $tablePart[] = $position;
             }
-            $res = $core->call('crm.deal.productrows.set',['ID'=> $this->getOrderId(), 'ROWS'=> [$tablePart]]);
+            $this->log->debug('Массив для записи - ',
+                        [
+                            'Массив для записи - ' => $tablePart,
+                        ]);
+            $res = $core->call('crm.deal.productrows.set',['ID'=> $this->getOrderId(), 'ROWS'=> $tablePart]);
             return $remains;
 
         } catch (\Throwable $exception) {
