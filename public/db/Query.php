@@ -21,7 +21,7 @@ use function PHPUnit\Framework\isEmpty;
 class Query
 {
     private $conection;
-    //private $log;
+    private $log;
 
     const BONUS_FOR_NEW_OWNER = 200;
     const DEFAULT_RULE = 'default';
@@ -30,9 +30,10 @@ class Query
      * ParseNewOrder constructor - Конструктор класса
      * @param $conection - соединение с базой данных
      */
-    public function __construct(PDO $conection)
+    public function __construct(PDO $conection, $log)
     {
         $this->conection = $conection;
+        $this->log = $log;
        /* $this->log = new Logger('name');
         $this->log->pushHandler(new StreamHandler('/logs/webhook.log', Logger::DEBUG));
         $this->log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
@@ -53,10 +54,11 @@ class Query
             $response = $this->conection->prepare($query);
             $response->execute(['idOwner' => $idOwner]);
             $data = $response->fetch()['exist'];
+            $this->log->debug("Проверка пользователя: ". $idOwner. " - ".$data);
             return $data;
         } catch (PDOException $e) {
+            $this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
             return $e->getMessage();
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
 
@@ -73,13 +75,16 @@ class Query
             $response = $this->conection->prepare($query);
             $response->execute(['idOwner' => $idOwner, 'bonus_discount' => self::BONUS_FOR_NEW_OWNER]);
             if ($response) {
+                $this->log->debug("Пользователь добавлен");
                 return "Добавлено";
             } else {
+                $this->log->debug("Пользователь не добавлен");
                 return "Не добавлено";
             }
         } catch (PDOException $e) {
+            $this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
             return $e->getMessage();
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
+
         }
     }
 
@@ -98,13 +103,15 @@ class Query
             $response = $this->conection->prepare($query);
             $response->execute(['idOwner' => $idOwner, 'typeAction' => $typeAction, 'date' => $today]);
             if ($response) {
+                $this->log->debug("Запись в таблицу дат добавлена");
                 return "Добавлено";
             } else {
+                $this->log->debug("Запись в таблицу дат  не добавлена");
                 return "Не добавлено";
             }
         } catch (PDOException $e) {
+            $this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
             return $e->getMessage();
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
 
@@ -191,6 +198,7 @@ class Query
             //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
+
 
     /**
      * Начисление бонусов (нового значения бонусов) на счёт пользователя

@@ -58,7 +58,7 @@ $log->debug('Таблицы в БД:',
             [
                 'Таблицы в БД:' => $connection->getTables(),
             ]);
-$person = new db\Query($pdo);
+$person = new db\Query($pdo, $log);
 
 switch ($dataRequest['ID_STAGE']) {
     case 'C2:NEW' : {

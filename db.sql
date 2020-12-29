@@ -24,6 +24,10 @@ CREATE TABLE `bonusbase`.`bonus` (
 ALTER TABLE `bonusbase`.`bonus`
     CHANGE COLUMN `id_bonus` `id_bonus` INT(20) UNSIGNED NOT NULL AUTO_INCREMENT ;
 
+ALTER TABLE `bonusbase`.`bonus`
+    CHANGE COLUMN `bonus_discount` `bonus_discount` DECIMAL(15,3) NULL DEFAULT NULL ;
+
+
 # Таблица Этап
 CREATE TABLE `bonusbase`.`stage` (
     `id_stage` INT(20) UNSIGNED NOT NULL,
