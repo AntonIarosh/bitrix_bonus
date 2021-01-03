@@ -211,8 +211,15 @@ class CalculateBonus
                 $allDiscount = $this->getBonus();
             }
             $productsInfo = [];
-            $discountForOnePosition = $allDiscount/count($this->getProducts());
-
+            $this->log->debug('Остатки бонусной суммы - ',
+                              [
+                                  'Остатки бонусной суммы - ' => $remains,
+                              ]);
+            //$discountForOnePosition = $allDiscount/count($this->getProducts());
+            $this->log->debug('Сумма скидки - ',
+                              [
+                                  'Сумма скидки - ' => $allDiscount,
+                              ]);
             $this->log->debug('Исходные данные - ',
                               [
                                   'Исходные данные - ' => $this->getProducts(),
@@ -220,75 +227,119 @@ class CalculateBonus
 
             $discountNumber = 0;
             $tablePart = [];
-            foreach ($this->getProducts() as $position) {
-               // $productsInfo[$discountForOnePosition] = $position['QUANTITY'];
-                $pOld = $position['PRICE'];
-                if ($pOld < $discountForOnePosition) {
-                    $remains += $discountForOnePosition - $pOld;
+            $oldTablePart = $this->getProducts();
+            for ($i =0; $i < count($oldTablePart); $i++) {
+                // Попытка записать всю скидку в текущию позицию
+                if ($allDiscount < $oldTablePart[$i]['PRICE'] * $oldTablePart[$i]['QUANTITY'] ) {
+                    $oldTablePart[$i]['DISCOUNT_SUM'] = $allDiscount/$oldTablePart[$i]['QUANTITY'] ;
+                    $oldTablePart[$i]['PRICE_EXCLUSIVE'] = $oldTablePart[$i]['PRICE'] - $oldTablePart[$i]['DISCOUNT_SUM'];
+                    $allDiscount -= $oldTablePart[$i]['DISCOUNT_SUM'] * $oldTablePart[$i]['QUANTITY'] ;
+                    $discountNumber += $oldTablePart[$i]['DISCOUNT_SUM']  * $oldTablePart[$i]['QUANTITY'] ;
+                    $tablePart[] = $oldTablePart[$i];
+                    continue;
+                }
 
-                    $position['DISCOUNT_SUM'] = $pOld / $position['QUANTITY'];
+
+                // Попытка делить скидку на все позиции
+                $discountForOnePosition = $allDiscount/(count($oldTablePart) - $i);
+                $this->log->debug('скидка на эту строку тч - ',
+                                  [
+                                      'скидка на эту строку тч - ' => $discountForOnePosition,
+                                      'позиций в  тч - ' => count($oldTablePart),
+                                      'позиция - ' => count($oldTablePart) - $i,
+                                  ]);
+                $pOld = $oldTablePart[$i]['PRICE'];
+                if ($pOld < $discountForOnePosition) {
+                    $this->log->debug('цена товара в тч меньше скидки - ',
+                                      [
+                                          'цена товара - ' => $pOld,
+                                          'скидка - ' => $discountForOnePosition,
+                                      ]);
+                    //$remains += $discountForOnePosition - $pOld;
+                    $oldTablePart[$i]['DISCOUNT_SUM'] = ($pOld / $oldTablePart[$i]['QUANTITY'])/100 * 95;
                     $this->log->debug('Простая сумма скидки - ',
                                       [
-                                          'Простая сумма скидки - ' => $position['DISCOUNT_SUM'],
+                                          'Простая сумма скидки - ' => $oldTablePart[$i]['DISCOUNT_SUM'],
                                       ]);
-                    $wholeDevision = floor($pOld / $position['QUANTITY']);
-                    $remainderOfDevision =   $y = explode('.', $pOld/$position['QUANTITY'])[1];   // 321 ;
-                    $sum = $wholeDevision. '.' .$remainderOfDevision;
+                    $wholeDevision = floor($pOld / $oldTablePart[$i]['QUANTITY']);
+                    $remainderOfDevision =  fmod($pOld / $oldTablePart[$i]['QUANTITY'], 1); ;   // 321 ;
+                    $sum = $wholeDevision+$remainderOfDevision;
                     $this->log->debug('Сложная сумма скидки - ',
                                       [
                                           'Сложная сумма скидки - ' => $sum,
                                           'Делим - ' => $pOld,
-                                          'На - ' => $position['QUANTITY'],
+                                          'На - ' => $oldTablePart[$i]['QUANTITY'],
                                           'Целая - ' => $wholeDevision,
                                           'Дробная - ' => $remainderOfDevision,
-                                          'Сложная сумма скидки 2 - ' => $wholeDevision. '.' .$remainderOfDevision,
+                                          'Сложная сумма скидки 2 - ' => $wholeDevision+$remainderOfDevision,
+                                      ]);
+                    $oldTablePart[$i]['PRICE_EXCLUSIVE'] = $pOld - $oldTablePart[$i]['DISCOUNT_SUM'];
+                    $discountNumber += $oldTablePart[$i]['DISCOUNT_SUM'];
+                    $allDiscount -= $oldTablePart[$i]['DISCOUNT_SUM'] * $oldTablePart[$i]['QUANTITY'];
+                    $this->log->debug('Сумма всей скидки - ',
+                                      [
+                                          'после вычитания позиции тч - ' => $allDiscount,
+                                      ]);
+                    if ($i == count($oldTablePart)-1) {
+                        $remains += $allDiscount;
+                        $this->log->debug('Остатки бонусной суммы - ',
+                                          [
+                                              'Остатки бонусной суммы - ' => $remains,
+                                          ]);
+                    }
+                } else {
+                    $this->log->debug('цена товара в тч больше скидки - ',
+                                      [
+                                          'цена товара - ' => $pOld,
+                                          'скидка - ' => $discountForOnePosition,
+                                      ]);
+                    $oldTablePart[$i]['DISCOUNT_SUM'] = $discountForOnePosition / $oldTablePart[$i]['QUANTITY'];
+                    $oldTablePart[$i]['PRICE_EXCLUSIVE'] = $pOld - $oldTablePart[$i]['DISCOUNT_SUM'];
+                    $discountNumber += $oldTablePart[$i]['DISCOUNT_SUM'];
+                    $allDiscount -= $oldTablePart[$i]['DISCOUNT_SUM'] * $oldTablePart[$i]['QUANTITY'];
+                    $this->log->debug('Сумма всей скидки - ',
+                                      [
+                                          'после вычитания позиции тч - ' => $allDiscount,
                                       ]);
 
-
-                    $position['PRICE_EXCLUSIVE'] = $pOld - $position['DISCOUNT_SUM'];
-                    $discountNumber += $position['DISCOUNT_SUM'];
-                    /*$position['PRICE_NETTO'] = $pOld - $position['DISCOUNT_SUM'];
-                    $position['PRICE_BRUTTO'] = $pOld - $position['DISCOUNT_SUM'];
-                    $position['PRICE_ACCOUNT'] = $pOld - $position['DISCOUNT_SUM'];*/
-                } else {
-                    $position['DISCOUNT_SUM'] = $discountForOnePosition / $position['QUANTITY'];
-                    $position['PRICE_EXCLUSIVE'] = $pOld - $position['DISCOUNT_SUM'];
-                    $discountNumber += $position['DISCOUNT_SUM'];
                     $this->log->debug('Простая сумма скидки - ',
                                       [
-                                          'Простая сумма скидки - ' => $position['DISCOUNT_SUM'],
+                                          'Простая сумма скидки - ' => $oldTablePart[$i]['DISCOUNT_SUM'],
+                                          //'Простая сумма скидки - ' => $position['DISCOUNT_SUM'],
                                       ]);
 
-                    $wholeDevision = floor($discountForOnePosition / $position['QUANTITY']);
+                    $wholeDevision = floor($discountForOnePosition / $oldTablePart[$i]['QUANTITY']);
+                    //$wholeDevision = floor($discountForOnePosition / $position['QUANTITY']);
                     //$remainderOfDevision = $discountForOnePosition % $position['QUANTITY'];
-                    $remainderOfDevision =   $y = explode('.', discountForOnePosition / $position['QUANTITY'])[1];
-                    $sum = $wholeDevision. '.' .$remainderOfDevision;
+                    $remainderOfDevision =  fmod($discountForOnePosition / $oldTablePart[$i]['QUANTITY'], 1); ;   // 321 ;
+                   // $remainderOfDevision =   $y = explode('.', discountForOnePosition / $position['QUANTITY'])[1];
+                    $sum = $wholeDevision+$remainderOfDevision;
                     $this->log->debug('Сложная сумма скидки - ',
                                       [
                                           'Сложная сумма скидки - ' => $sum,
                                           'Делим - ' => $discountForOnePosition,
-                                          'На - ' => $position['QUANTITY'],
+                                          'На - ' => $oldTablePart[$i]['QUANTITY'],
+                                          //'На - ' => $position['QUANTITY'],
                                           'Целая - ' => $wholeDevision,
                                           'Дробная - ' => $remainderOfDevision,
-                                          'Сложная сумма скидки 2 - ' => $wholeDevision. '.' .$remainderOfDevision,
+                                          'Сложная сумма скидки 2 - ' => $wholeDevision+$remainderOfDevision,
                                       ]);
                 }
                 //$res = $core->call('crm.deal.productrows.set',['ID'=> $this->getOrderId(), 'ROWS'=> [$tablePart]]);
-                $tablePart[] = $position;
+                $tablePart[] = $oldTablePart[$i];
+                //$tablePart[] = $position;
             }
+            $this->log->debug('Скидка остаток - ',
+                              ['Скидка - остаток - ' => $allDiscount,]);
+            $this->log->debug('Скидка  на - ',
+                              ['Скидка  на' => $discountNumber,]);
             $this->log->debug('Массив для записи - ',
-                        [
-                            'Массив для записи - ' => $tablePart,
-                        ]);
+                        ['Массив для записи - ' => $tablePart,]);
             $res = $core->call('crm.deal.productrows.set',['ID'=> $this->getOrderId(), 'ROWS'=> $tablePart]);
             $this->log->debug('Бонусы стали - ',
-                              [
-                                  'Бонусы стали - ' => $remains,
-                              ]);
-            $this->log->debug('Скидка - ',
-                              [
-                                  'Скидка- ' => $allDiscount,
-                              ]);
+                              ['Бонусы стали - ' => $remains,]);
+            $this->log->debug('Скидка остаток - ',
+                              ['Скидка - остаток - ' => $allDiscount,]);
             return $remains;
 
         } catch (\Throwable $exception) {
