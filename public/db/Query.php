@@ -34,11 +34,6 @@ class Query
     {
         $this->conection = $conection;
         $this->log = $log;
-       /* $this->log = new Logger('name');
-        $this->log->pushHandler(new StreamHandler('/logs/webhook.log', Logger::DEBUG));
-        $this->log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
-
-        $this->client = HttpClient::create(['http_version' => '2.0']);*/
     }
 
     /**

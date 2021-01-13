@@ -23,7 +23,8 @@
     "roave/security-advisories": "dev-master",
     "phpunit/phpunit": "9.5.*",
     "symfony/debug-bundle": "5.*",
-    "symfony/maker-bundle": "^1.26"
+    "symfony/maker-bundle": "^1.26",
+    "mockery/mockery": "^1.4"
   },
   "autoload": {
     "psr-4": {

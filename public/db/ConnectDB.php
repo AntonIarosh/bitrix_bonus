@@ -12,8 +12,6 @@ class ConnectDB
 {
     private PDO $pdo;
 
- //   private $log;
-
     private $allBDTables;
 
     /**
@@ -28,22 +26,15 @@ class ConnectDB
                 'Jhbjy:333',
                 [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
             );
-          /*$this->log = new Logger('name');
-            $this->log->pushHandler(new StreamHandler('logs/webhook.log', Logger::DEBUG));
-            $this->log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));*/
 
             $query = 'SHOW TABLES;';
-            //$query = 'Select version() as VERSION';;
             $ver = $this->pdo->query($query);
-
             $tables = $ver->fetchAll();
             $columns = array_column($tables,'Tables_in_bonusbase');
             $this->allBDTables = $columns;
             print_r($columns);
-           // $this->log->debug("Установлено соединение с базой данных ");
         } catch (PDOException $e) {
             echo "Невозможно установить соединение с базой данных " . $e->getMessage();
-          //  $this->log->debug("Невозможно установить соединение с базой данных : ". $e->getMessage());
         }
     }
 

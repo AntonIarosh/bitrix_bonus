@@ -78,7 +78,6 @@ public function __construct($orderData = 0, $orderId = 0)
         $data = [];
 
         $data["DocId"]  = $request->get("document_id");
-        //$data["ContentALL"]  = $request->request->all();
         $data["id"] = $data["DocId"][2];
 
         $requestParams = explode("_",$data["DocId"][self::DOC_ID_PLACE_IN_ALL_IFO]);
