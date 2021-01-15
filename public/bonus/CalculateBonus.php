@@ -201,7 +201,7 @@ class CalculateBonus
         try {
             $core = (new \Bitrix24\SDK\Core\CoreBuilder())
                 ->withLogger($this->log)
-                ->withWebhookUrl('https://b24-cdukpe.bitrix24.ru/rest/1/o1aiaw6ifekz1ryy/')
+                ->withWebhookUrl('https://b24-r1mql2.bitrix24.ru/rest/1/yn57uv4t4npz440h/')
                 ->build();
 
             $this->log->debug('Бонусы были - ',

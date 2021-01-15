@@ -155,7 +155,7 @@ class OrderAllData
         try {
             $core = (new \Bitrix24\SDK\Core\CoreBuilder())
                 ->withLogger($this->log)
-                ->withWebhookUrl('https://b24-cdukpe.bitrix24.ru/rest/1/o1aiaw6ifekz1ryy/')
+                ->withWebhookUrl('https://b24-r1mql2.bitrix24.ru/rest/1/yn57uv4t4npz440h/')
                 ->build();
 
 
@@ -163,7 +163,7 @@ class OrderAllData
 
             $arrayOrderData = $res->getResponseData()->getResult()->getResultData();
             print_r($arrayOrderData);
-            $this->setIdOrderOvner($arrayOrderData['CONTACT_ID']);
+            $this->setIdOrderOvner((int)$arrayOrderData['CONTACT_ID']);
             $this->setStage($arrayOrderData['STAGE_ID']);
             $this->setOpportunity($arrayOrderData['OPPORTUNITY']);
 

@@ -8,13 +8,15 @@ require_once("HttpInterface/ParseNewOrder.php");
 require_once('./db/Query.php');
 require_once('db/ConnectDB.php');
 require_once('bonus/CalculateBonus.php');
-require_once("HttpInterface/ParseNewOrder.php");
+require_once("HttpInterface/MakePresent.php");
 
 use HttpInterface\ParseNewOrder;
+use HttpInterface\MakePresent;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use db\Query;
 use bonus\CalculateBonus;
+use PHPUnit\Util\ErrorHandler;
 
 
 $log = new Logger('name');
@@ -53,16 +55,40 @@ if (class_exists('db\Query')) {
 } else {
     $log->debug("Нет класса Query");
 }
+
 $connection = new ConnectDB();
-$pdo = $connection->getPDO();
 $log->debug('Таблицы в БД:',
-    [
-        'Таблицы в БД:' => $connection->getTables(),
-    ]);
-$person = new db\Query($pdo, $log);
+            [
+                'Таблицы в БД:' => $connection->getTables(),
+            ]);
+$pdo = $connection->getPDO();
+/*try {
+    $pdo = new PDO(
+        'mysql:host=127.0.0.1:3306;dbname=bonusbase',
+        'bonususer',
+        'Jhbjy:333',
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
+    $query = 'SHOW TABLES;';
+    $ver = $this->pdo->query($query);
+    $tables = $ver->fetchAll();
+    $columns = array_column($tables,'Tables_in_bonusbase');
+    $this->allBDTables = $columns;
+    $log->debug('Таблицы в БД:',
+                [
+                    'Таблицы в БД:' => $columns,
+                ]);
+} catch (PDOException $e) {
+    $log->debug('Ошибка подключение к БД - ',
+                [
+                    'Ошибка подключение к БД - ' => $e->getMessage(),
+                ]);
+}*/
+
+$person = new db\Query($pdo);
 
 switch ($dataRequest['ID_STAGE']) {
-    case 'C2:NEW' :
+    case 'C1:NEW' :
     {
         $log->debug("Проверка регистрации пользователя " . $dataRequest['ID_CLIENT']);
 
@@ -89,7 +115,7 @@ switch ($dataRequest['ID_STAGE']) {
         }
         break;
     }
-    case 'C2:PREPAYMENT_INVOICE' :
+    case 'C1:PREPAYMENT_INVOICE' :
     {
         $log->debug("Разплачиваемся бонусами");
         $respons = $person->getBonusCount($dataRequest['ID_CLIENT']);
@@ -141,7 +167,7 @@ switch ($dataRequest['ID_STAGE']) {
         break;
 
     }
-    case 'C2:WON' :
+    case 'C1:WON' :
     {
         $log->debug("Сделка завершена");
         $respons = $person->getStage($dataRequest['id']);
@@ -149,7 +175,7 @@ switch ($dataRequest['ID_STAGE']) {
             [
                 'Этап сделки - ' => $respons,
             ]);
-        if (($respons == null) || ($respons != 'C2:PREPAYMENT_INVOICE')) {
+        if (($respons == null) || ($respons != 'C1:PREPAYMENT_INVOICE')) {
             $rule = $person->getRule();
             $log->debug('Правило - ',
                 [
@@ -169,6 +195,19 @@ switch ($dataRequest['ID_STAGE']) {
         } else {
             $log->debug("Была скидка, и бонусы начислять нельзя");
         }
+        if ($dataRequest['PRICE_ORDER'] > 4000) {
+            $present = new MakePresent($dataRequest['id'], $dataRequest['PRICE_ORDER'], $dataRequest['ID_CLIENT']);
+            $present->calculatePresents();
+
+            $log->debug('Подарки - ',
+                        [
+                            'Подарки ' => $present->getPresents(),
+                        ]);
+            $present->makePresents($present->getPresents());
+            $log->debug("Подарок добавлен");
+        }
+
+
         $log->debug('Завершение сделки без начисления - ',
             [
                 'Завершение сделки без начисления - ID ' => $dataRequest['id'],
