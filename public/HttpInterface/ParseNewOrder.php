@@ -7,7 +7,9 @@ namespace HttpInterface;
 include dirname(__DIR__) . './../vendor/autoload.php';
 require_once 'OrderAllData.php';
 
+use PhpParser\Error;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class ParseNewOrder - Обрабатывает сработавший вэбхук и
@@ -75,6 +77,7 @@ public function __construct($orderData = 0, $orderId = 0)
     public function makeOrderData()
     {
         $request = Request::createFromGlobals();
+
         $data = [];
 
         $data["DocId"]  = $request->get("document_id");

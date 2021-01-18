@@ -17,39 +17,39 @@ class CalculateBonusTest extends TestCase
 {
     public function testBonusCalculate()
     {
-        // Запись тестовых данных в файл.
-      /* $log = new Logger('name');
-        $log->pushHandler(new StreamHandler('logs/test.log', Logger::DEBUG));
-        $log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
-        $client = HttpClient::create(['http_version' => '2.0']);
-        $core = (new \Bitrix24\SDK\Core\CoreBuilder())
-            ->withLogger($log)
-            ->withWebhookUrl('https://b24-cdukpe.bitrix24.ru/rest/1/o1aiaw6ifekz1ryy/')
-            ->build();
+        // Запись текстовых данных в файл. - формирование табличной части заказа
+        /* $log = new Logger('name');
+          $log->pushHandler(new StreamHandler('logs/test.log', Logger::DEBUG));
+          $log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
+          $client = HttpClient::create(['http_version' => '2.0']);
+          $core = (new \Bitrix24\SDK\Core\CoreBuilder())
+              ->withLogger($log)
+              ->withWebhookUrl('https://b24-cdukpe.bitrix24.ru/rest/1/o1aiaw6ifekz1ryy/')
+              ->build();
 
 
-        $res = $core->call('crm.deal.productrows.get',['ID'=> 12]);
-        var_dump($res->getResponseData()->getResult()->getResultData());
-        $mass = $res->getResponseData()->getResult()->getResultData();
-        $fileName = 'content2.txt';
-        file_put_contents($fileName,$mass);*/
+          $res = $core->call('crm.deal.productrows.get',['ID'=> 12]);
+          var_dump($res->getResponseData()->getResult()->getResultData());
+          $mass = $res->getResponseData()->getResult()->getResultData();
+          $fileName = 'content2.txt';
+          file_put_contents($fileName,$mass);*/
 
 
-      //  $json = json_encode($mass);
+        //  $json = json_encode($mass);
         $fileName = 'content1.txt';
         $data = json_decode(file_get_contents($fileName));
         $array = [];
-        foreach($data as $value) {
+        foreach ($data as $value) {
             $array[] = (array)$value;
         }
 
         print_r($array);
 
-        $bonusCalculator = new CalculateBonus(2);
+        $bonusCalculator = new CalculateBonus(1);
         $bonusCalculator->setOpportunity(45);
         $bonusCalculator->setBonus(100);
         $bonusCalculator->setProducts($array);
-        $bonusCalculator->setIdOrderOwner(4);
+        $bonusCalculator->setIdOrderOwner(2);
         $bonusCalculator->setDiscaountPersentage(30);
         $newBonuses = $bonusCalculator->calculateAndDiscount();
         // Расчёт остатка бонусов
@@ -63,17 +63,17 @@ class CalculateBonusTest extends TestCase
         $fileName = 'content1.txt';
         $data = json_decode(file_get_contents($fileName));
         $array = [];
-        foreach($data as $value) {
+        foreach ($data as $value) {
             $array[] = (array)$value;
         }
 
         print_r($array);
 
-        $bonusCalculator = new CalculateBonus(2);
+        $bonusCalculator = new CalculateBonus(1);
         $bonusCalculator->setOpportunity(45);
         $bonusCalculator->setBonus(100);
         $bonusCalculator->setProducts($array);
-        $bonusCalculator->setIdOrderOwner(4);
+        $bonusCalculator->setIdOrderOwner(2);
         $bonusCalculator->setDiscaountPersentage(30);
         $newBonuses = $bonusCalculator->calculateAndDiscount();
         // Расчёт остатка бонусов
@@ -89,38 +89,38 @@ class CalculateBonusTest extends TestCase
 
     public function testBonusCalculateBigOrder3positionLAstPositionIsLargest()
     {
-        // Запись тестовых данных в файл.
-         /* $log = new Logger('name');
-          $log->pushHandler(new StreamHandler('logs/test.log', Logger::DEBUG));
-          $log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
-          $client = HttpClient::create(['http_version' => '2.0']);
-          $core = (new \Bitrix24\SDK\Core\CoreBuilder())
-              ->withLogger($log)
-              ->withWebhookUrl('https://b24-cdukpe.bitrix24.ru/rest/1/o1aiaw6ifekz1ryy/')
-              ->build();
+        // Запись текстовых данных в файл. - формирование табличной части заказа
+        /* $log = new Logger('name');
+         $log->pushHandler(new StreamHandler('logs/test.log', Logger::DEBUG));
+         $log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
+         $client = HttpClient::create(['http_version' => '2.0']);
+         $core = (new \Bitrix24\SDK\Core\CoreBuilder())
+             ->withLogger($log)
+             ->withWebhookUrl('https://b24-cdukpe.bitrix24.ru/rest/1/o1aiaw6ifekz1ryy/')
+             ->build();
 
 
-          $res = $core->call('crm.deal.productrows.get',['ID'=> 244]);
-          var_dump($res->getResponseData()->getResult()->getResultData());
-          $mass = $res->getResponseData()->getResult()->getResultData();
-          $fileName = 'content2.txt';
-          $json = json_encode($mass);
-          file_put_contents($fileName,$json);*/
+         $res = $core->call('crm.deal.productrows.get',['ID'=> 244]);
+         var_dump($res->getResponseData()->getResult()->getResultData());
+         $mass = $res->getResponseData()->getResult()->getResultData();
+         $fileName = 'content2.txt';
+         $json = json_encode($mass);
+         file_put_contents($fileName,$json);*/
 
         $fileName = 'content2.txt';
         $data = json_decode(file_get_contents($fileName));
         $array = [];
-        foreach($data as $value) {
+        foreach ($data as $value) {
             $array[] = (array)$value;
         }
 
         print_r($array);
 
-        $bonusCalculator = new CalculateBonus(2);
+        $bonusCalculator = new CalculateBonus(1);
         $bonusCalculator->setOpportunity(1028);
         $bonusCalculator->setBonus(400);
         $bonusCalculator->setProducts($array);
-        $bonusCalculator->setIdOrderOwner(4);
+        $bonusCalculator->setIdOrderOwner(1);
         $bonusCalculator->setDiscaountPersentage(30);
         $newBonuses = $bonusCalculator->calculateAndDiscount();
         // Расчёт остатка бонусов
@@ -146,5 +146,3 @@ class CalculateBonusTest extends TestCase
     }
 }
 
-$CalculateBonusTest = new  CalculateBonusTest();
-$CalculateBonusTest ->testBonusCalculateBigOrder3positionLAstPositionIsLargest();

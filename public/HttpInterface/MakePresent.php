@@ -12,6 +12,7 @@ use Monolog\Handler\StreamHandler;
 
 /**
  * Class MakePresent - Вычисление возможности прикрепление подарка, и его прикрепление
+ *
  * @package Numbers
  */
 class MakePresent
@@ -25,6 +26,7 @@ class MakePresent
 
     /**
      * OrderAllData constructor - Конструктор класса
+     *
      * @param int $orderId - идентификатор заказа
      */
     public function __construct($orderId, $opportunity, $idOvner)
@@ -38,8 +40,11 @@ class MakePresent
 
         $this->client = HttpClient::create(['http_version' => '2.0']);
     }
+
     /**
-     * @return mixed
+     * Получить подарки
+     *
+     * @return mixed - подарки, в ввиде массива продуктов
      */
     public function getPresents()
     {
@@ -47,7 +52,9 @@ class MakePresent
     }
 
     /**
-     * @param mixed $presents
+     * Задать подраки
+     *
+     * @param mixed $presents - подарки, в ввиде массива продуктов
      */
     public function setPresents($presents): void
     {
@@ -56,6 +63,7 @@ class MakePresent
 
     /**
      * Задать идентификатор заказа
+     *
      * @param $id - идентификатор заказа
      */
     public function setOrderId($id)
@@ -65,6 +73,7 @@ class MakePresent
 
     /**
      * Получить идентификатор заказа
+     *
      * @return - идентификатор заказа
      */
     public function getOrderId()
@@ -74,6 +83,7 @@ class MakePresent
 
     /**
      * Задать идентификатор заказчика
+     *
      * @param $idOvner - идентификатор заказчика
      */
     public function setIdOrderOvner($idOvner)
@@ -83,6 +93,7 @@ class MakePresent
 
     /**
      * Получить идентификатор заказчика
+     *
      * @return - идентификатор заказчика
      */
     public function getIdOrderOvner()
@@ -92,6 +103,7 @@ class MakePresent
 
     /**
      * Задать данные возможности сделки
+     *
      * @param $opportunity - возможности сделки
      */
     public function setOpportunity($opportunity)
@@ -101,6 +113,7 @@ class MakePresent
 
     /**
      * Получить данные возможности сделки
+     *
      * @return - сумму сделки
      */
     public function getOpportunity()
@@ -108,8 +121,11 @@ class MakePresent
         return $this->opportunity;
     }
 
+
     /**
-     * Получить из запроса данные и разобрать их
+     * Обнуружение подарков среди товаров, и их сбор в массив
+     *
+     * @return array - все подарки
      */
     public function calculatePresents()
     {
@@ -120,7 +136,7 @@ class MakePresent
                 ->build();
 
             // Запрос всех продуктов
-            $res = $core->call('crm.product.list',['order'=> ["NAME" => "ASC"] , 'select' => ['*', 'PROPERTY_*']]);
+            $res = $core->call('crm.product.list', ['order' => ["NAME" => "ASC"], 'select' => ['*', 'PROPERTY_*']]);
             $arrayOrderData = $res->getResponseData()->getResult()->getResultData();
 
             $presents = [];
@@ -128,18 +144,18 @@ class MakePresent
             foreach ($arrayOrderData as $value) {
                 if ($value['PROPERTY_109'] != null) {
                     $value['PRICE'] = 0;
-                    array_push($presents,$value);
+                    array_push($presents, $value);
                 }
-
             }
-            $this->log->debug('[v] - ',
-                              [
-                                  '[v] ' => $presents,
-                              ]);
+            $this->log->debug(
+                '[v] - ',
+                [
+                    '[v] ' => $presents,
+                ]
+            );
             $this->setPresents($presents);
 
             return $presents;
-
         } catch (\Throwable $exception) {
             print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);
             print(sprintf('тип: %s', get_class($exception)) . PHP_EOL);
@@ -148,9 +164,12 @@ class MakePresent
     }
 
     /**
-     * @param $allpresents
+     * Выбор одного подарка, его прикрепление к табличной части заказа
+     *
+     * @param $allpresents - массив со всеми подарками
      */
-    public function makePresents($allpresents){
+    public function makePresents($allpresents)
+    {
         try {
             $core = (new \Bitrix24\SDK\Core\CoreBuilder())
                 ->withLogger($this->log)
@@ -159,28 +178,31 @@ class MakePresent
 
             // Выбор конкретного подарка перечня подарков.
             $randomIterator = random_int(1, count($allpresents));
-            $this->log->debug('Массив - ',
-                              [
-                                  'Id выбранного подарка' => $randomIterator,
-                                  'Всего подарков' => count($allpresents),
-                              ]);
+            $this->log->debug(
+                'Массив - ',
+                [
+                    'Id выбранного подарка' => $randomIterator,
+                    'Всего подарков' => count($allpresents),
+                ]
+            );
             // Запрос табличной части заказа
-            $res = $core->call('crm.deal.productrows.get',['ID' => $this->orderId]);
+            $res = $core->call('crm.deal.productrows.get', ['ID' => $this->orderId]);
             // Формирование записи - строки подарка в табличной части
             $oldTablePart = $res->getResponseData()->getResult()->getResultData();
-            $thisPresent =[];
+            $thisPresent = [];
             $thisPresent['PRODUCT_ID'] = $allpresents[$randomIterator - 1]['ID'];
             $thisPresent['PRICE'] = 0;
             $thisPresent['QUANTITY'] = 1;
-            $this->log->debug('Подарок - ',
-                              [
-                                  'Подарок ' => $thisPresent,
-                              ]);
+            $this->log->debug(
+                'Подарок - ',
+                [
+                    'Подарок ' => $thisPresent,
+                ]
+            );
 
             array_push($oldTablePart, $thisPresent);
             // Выполнение записи табличной части заказа в битрикс
-            $res = $core->call('crm.deal.productrows.set',['ID'=> $this->getOrderId(), 'ROWS'=> $oldTablePart]);
-
+            $res = $core->call('crm.deal.productrows.set', ['ID' => $this->getOrderId(), 'ROWS' => $oldTablePart]);
         } catch (\Throwable $exception) {
             print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);
             print(sprintf('тип: %s', get_class($exception)) . PHP_EOL);

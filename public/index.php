@@ -25,13 +25,10 @@ $log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
 $log->pushProcessor(new \Monolog\Processor\WebProcessor());
 $log->pushProcessor(new \Monolog\Processor\IntrospectionProcessor());
 
-print('<pre>');
-var_dump('hello 1111111');
-
 error_reporting(E_ALL);
-var_dump(ini_set('error_reporting', 'E_ALL'));
-var_dump(ini_set('log_errors', '1')); // включить лог ошибок
-var_dump(ini_set('error_log', __DIR__ . '/log.txt')); // расположение лог-файла ошибок
+ini_set('error_reporting', 'E_ALL');
+ini_set('log_errors', '1'); // включить лог ошибок
+ini_set('error_log', __DIR__ . '/log.txt'); // расположение лог-файла ошибок
 error_log('Hello, errors!'); // записать в лог-файл значение/строку
 
 $log->debug("Обращение к файлу");
@@ -57,33 +54,13 @@ if (class_exists('db\Query')) {
 }
 
 $connection = new ConnectDB();
-$log->debug('Таблицы в БД:',
-            [
-                'Таблицы в БД:' => $connection->getTables(),
-            ]);
+$log->debug(
+    'Таблицы в БД:',
+    [
+        'Таблицы в БД:' => $connection->getTables(),
+    ]
+);
 $pdo = $connection->getPDO();
-/*try {
-    $pdo = new PDO(
-        'mysql:host=127.0.0.1:3306;dbname=bonusbase',
-        'bonususer',
-        'Jhbjy:333',
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
-    $query = 'SHOW TABLES;';
-    $ver = $this->pdo->query($query);
-    $tables = $ver->fetchAll();
-    $columns = array_column($tables,'Tables_in_bonusbase');
-    $this->allBDTables = $columns;
-    $log->debug('Таблицы в БД:',
-                [
-                    'Таблицы в БД:' => $columns,
-                ]);
-} catch (PDOException $e) {
-    $log->debug('Ошибка подключение к БД - ',
-                [
-                    'Ошибка подключение к БД - ' => $e->getMessage(),
-                ]);
-}*/
 
 $person = new db\Query($pdo);
 
@@ -93,20 +70,24 @@ switch ($dataRequest['ID_STAGE']) {
         $log->debug("Проверка регистрации пользователя " . $dataRequest['ID_CLIENT']);
 
         $respons = $person->isOwnerRegistred($dataRequest['ID_CLIENT']);
-        $log->debug('Проверка регистрации пользователя в БД - ',
+        $log->debug(
+            'Проверка регистрации пользователя в БД - ',
             [
                 'Проверка регистрации пользователя в БД - ' => $respons,
-            ]);
+            ]
+        );
         if ($respons != null) {
             $log->debug("Обработка пользователя :");
             if ($respons == 0) {
                 $log->debug("Добавление пользователя:");
                 $add = $person->addOwner($dataRequest['ID_CLIENT']);
                 $person->writeDate($dataRequest['ID_CLIENT'], "Register in system. 200 bonuses add.");
-                $log->debug('Пользователь добавлен в БД - ',
+                $log->debug(
+                    'Пользователь добавлен в БД - ',
                     [
                         'Пользователь добавлен в БД - ' => $add,
-                    ]);
+                    ]
+                );
             } else {
                 $log->debug("Пользователь зарегистрирован :");
             }
@@ -119,15 +100,19 @@ switch ($dataRequest['ID_STAGE']) {
     {
         $log->debug("Разплачиваемся бонусами");
         $respons = $person->getBonusCount($dataRequest['ID_CLIENT']);
-        $log->debug('Этап скидки. Бонусов - ',
+        $log->debug(
+            'Этап скидки. Бонусов - ',
             [
                 'Этап скидки. Бонусов - ' => $respons,
-            ]);
+            ]
+        );
         $discountPersent = $person->getMaxDiscauntPersent($dataRequest['ID_CLIENT']);
-        $log->debug('Максимальная скидка - ',
+        $log->debug(
+            'Максимальная скидка - ',
             [
                 'Максимальная скидка - ' => $discountPersent,
-            ]);
+            ]
+        );
 
         if (class_exists('CalculateBonus')) {
             $log->debug("Класс CalculateBonus");
@@ -137,10 +122,12 @@ switch ($dataRequest['ID_STAGE']) {
 
         $stage = $person->setStage($dataRequest['id'], $dataRequest['ID_STAGE']);
 
-        $log->debug('Этап установлен - ',
+        $log->debug(
+            'Этап установлен - ',
             [
                 'Этап установлен - ' => $stage,
-            ]);
+            ]
+        );
 
         $log->debug("Начинается вычисление и начисление бонусов :");
         $bonusCalculator = new CalculateBonus($dataRequest['id']);
@@ -150,47 +137,63 @@ switch ($dataRequest['ID_STAGE']) {
         $bonusCalculator->setIdOrderOwner($dataRequest['ID_CLIENT']);
         $bonusCalculator->setDiscaountPersentage($discountPersent);
         $newBonuses = $bonusCalculator->calculateAndDiscount();
-        $log->debug('Оставшиеся бонусы - ',
+        $log->debug(
+            'Оставшиеся бонусы - ',
             [
                 'Оставшиеся бонусы - ' => $newBonuses,
-            ]);
+            ]
+        );
 
 
         $bonusesAfterWrite = $person->writeRemainsBonuses($dataRequest['ID_CLIENT'], $newBonuses);
-        $log->debug('Остатки записаны в бд - ',
+        $log->debug(
+            'Остатки записаны в бд - ',
             [
                 'Остатки записаны в бд - ' => $bonusesAfterWrite,
-            ]);
+            ]
+        );
         $person->writeDate($dataRequest['ID_CLIENT'], "Bonuses are debited. Remains: " . $bonusesAfterWrite);
 
 
         break;
-
     }
     case 'C1:WON' :
     {
         $log->debug("Сделка завершена");
         $respons = $person->getStage($dataRequest['id']);
-        $log->debug('Этап сделки - ',
+        $log->debug(
+            'Этап сделки - ',
             [
                 'Этап сделки - ' => $respons,
-            ]);
+            ]
+        );
         if (($respons == null) || ($respons != 'C1:PREPAYMENT_INVOICE')) {
             $rule = $person->getRule();
-            $log->debug('Правило - ',
+            $log->debug(
+                'Правило - ',
                 [
                     'Правило - ' => $rule,
-                ]);
+                ]
+            );
             $bonuses = $person->getBonusCount($dataRequest['ID_CLIENT']);
-            $log->debug('Этап начисления. Бонусов - ',
+            $log->debug(
+                'Этап начисления. Бонусов - ',
                 [
                     'Этап начисления. Бонусов - ' => $bonuses,
-                ]);
-            $newBonuses = $person->accrualBonuses($dataRequest['ID_CLIENT'], $dataRequest['PRICE_ORDER'], $rule, $bonuses);
-            $log->debug('Этап начисления. Добавлены- ',
+                ]
+            );
+            $newBonuses = $person->accrualBonuses(
+                $dataRequest['ID_CLIENT'],
+                $dataRequest['PRICE_ORDER'],
+                $rule,
+                $bonuses
+            );
+            $log->debug(
+                'Этап начисления. Добавлены- ',
                 [
                     'Этап начисления. Добавлены - ' => $newBonuses,
-                ]);
+                ]
+            );
             $person->writeDate($dataRequest['ID_CLIENT'], "Add bonuses - " . $newBonuses);
         } else {
             $log->debug("Была скидка, и бонусы начислять нельзя");
@@ -199,22 +202,25 @@ switch ($dataRequest['ID_STAGE']) {
             $present = new MakePresent($dataRequest['id'], $dataRequest['PRICE_ORDER'], $dataRequest['ID_CLIENT']);
             $present->calculatePresents();
 
-            $log->debug('Подарки - ',
-                        [
-                            'Подарки ' => $present->getPresents(),
-                        ]);
+            $log->debug(
+                'Подарки - ',
+                [
+                    'Подарки ' => $present->getPresents(),
+                ]
+            );
             $present->makePresents($present->getPresents());
             $log->debug("Подарок добавлен");
         }
 
 
-        $log->debug('Завершение сделки без начисления - ',
+        $log->debug(
+            'Завершение сделки без начисления - ',
             [
                 'Завершение сделки без начисления - ID ' => $dataRequest['id'],
-            ]);
+            ]
+        );
 
         break;
-
     }
     default:
     {
