@@ -6,10 +6,14 @@ namespace bonus;
 
 include dirname(__DIR__) . './../vendor/autoload.php';
 
+use Bitrix24\SDK\Core\CoreBuilder;
+use Exception;
 use Monolog\Logger;
+use Monolog\Processor\MemoryUsageProcessor;
 use Symfony\Component\HttpClient\HttpClient;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\FirePHPHandler;
+use Throwable;
 
 /**
  * Class CalculateBonus - выполняют расчёт и выполнение скидки.
@@ -17,30 +21,31 @@ use Monolog\Handler\FirePHPHandler;
  */
 class CalculateBonus
 {
-    private $idOwner;
+    private int $idOwner;
     private $clientData;
     private $products;
-    private $opportunity;
-    private $orderId;
-    private $bonusValue;
+    private float $opportunity;
+    private int $orderId;
+    private float $bonusValue;
     private $newTablePart;
 
-    private $discaountPersentage;
+    private float $discaountPersentage;
 
-    private $log;
+    private Logger $log;
     private $client;
 
     /**
      * OrderAllData constructor - Конструктор класса
      * @param int $orderId - идентификатор заказа
+     * @throws Exception - исключение
      */
-    public function __construct($orderId)
+    public function __construct(int $orderId)
     {
         $this->orderId = $orderId;
         $this->log = new Logger('bonus');
         $this->log->pushHandler(new StreamHandler(__DIR__ . '/my_app.log', Logger::DEBUG));
         $this->log->pushHandler(new FirePHPHandler());
-        $this->log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
+        $this->log->pushProcessor(new MemoryUsageProcessor(true, true));
         $this->log->info('My logger is now ready');
         $this->client = HttpClient::create(['http_version' => '2.0']);
     }
@@ -76,18 +81,18 @@ class CalculateBonus
 
     /**
      * Получить идентификатор заказа
-     * @return - идентификатор заказа
+     * @return int - идентификатор заказа
      */
-    public function getOrderId()
+    public function getOrderId(): int
     {
         return $this->orderId;
     }
 
     /**
      * Получить процент максимальной скидки
-     * @return - процент максимальной скидки
+     * @return float - процент максимальной скидки
      */
-    public function getDiscaountPersentage()
+    public function getDiscaountPersentage(): float
     {
         return $this->discaountPersentage;
     }
@@ -112,16 +117,16 @@ class CalculateBonus
 
     /**
      * Получить количество бонусов
-     * @return - бонусы клиента
+     * @return float - бонусы клиента
      */
-    public function getBonus()
+    public function getBonus(): float
     {
         return $this->bonusValue;
     }
 
     /**
      * Задать идентификатор заказчика
-     * @param $idOvner - идентификатор заказчика
+     * @param $idOwner - идентификатор заказчика
      */
     public function setIdOrderOwner($idOwner)
     {
@@ -130,9 +135,9 @@ class CalculateBonus
 
     /**
      * Получить идентификатор заказчика
-     * @return - идентификатор заказчика
+     * @return int - идентификатор заказчика
      */
-    public function getIdOrderOwner()
+    public function getIdOrderOwner(): int
     {
         return $this->idOwner;
     }
@@ -148,7 +153,7 @@ class CalculateBonus
 
     /**
      * Получить данные клиента
-     * @return - массив данных клиента
+     * @return mixed - массив данных клиента
      */
     public function getClientData()
     {
@@ -166,7 +171,7 @@ class CalculateBonus
 
     /**
      * Получить данные продуктов сделки
-     * @return - массив табличной части сделки
+     * @return mixed - массив табличной части сделки
      */
     public function getProducts()
     {
@@ -184,9 +189,9 @@ class CalculateBonus
 
     /**
      * Получить данные возможности сделки
-     * @return - сумму сделки
+     * @return float - сумму сделки
      */
-    public function getOpportunity()
+    public function getOpportunity(): float
     {
         return $this->opportunity;
     }
@@ -199,7 +204,7 @@ class CalculateBonus
     public function calculateAndDiscount()
     {
         try {
-            $core = (new \Bitrix24\SDK\Core\CoreBuilder())
+            $core = (new CoreBuilder())
                 ->withLogger($this->log)
                 ->withWebhookUrl('https://b24-r1mql2.bitrix24.ru/rest/1/yn57uv4t4npz440h/')
                 ->build();
@@ -354,7 +359,7 @@ class CalculateBonus
                 ['Скидка - остаток - ' => $allDiscount,]
             );
             return $remains;
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);
             print(sprintf('ошибка: %s', $exception->getLine()) . PHP_EOL);
             print(sprintf('тип: %s', get_class($exception)) . PHP_EOL);

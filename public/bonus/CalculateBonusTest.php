@@ -1,10 +1,7 @@
 <?php
 
 use bonus\CalculateBonus;
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpClient\HttpClient;
 
 require_once 'CalculateBonus.php';
 

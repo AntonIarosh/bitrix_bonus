@@ -20,10 +20,10 @@ use function PHPUnit\Framework\isEmpty;
  */
 class Query
 {
-    private $conection;
+    private PDO $conection;
 
-    const BONUS_FOR_NEW_OWNER = 200;
-    const DEFAULT_RULE = 'default';
+    public const BONUS_FOR_NEW_OWNER = 200;
+    public const DEFAULT_RULE = 'default';
 
     /**
      * ParseNewOrder constructor - Конструктор класса
@@ -69,10 +69,10 @@ class Query
             $response->execute(['idOwner' => $idOwner, 'bonus_discount' => self::BONUS_FOR_NEW_OWNER]);
             if ($response) {
                // $this->log->debug("Пользователь добавлен");
-                return "Добавлено";
+                return 'Добавлено';
             } else {
                // $this->log->debug("Пользователь не добавлен");
-                return "Не добавлено";
+                return 'Не добавлено';
             }
         } catch (PDOException $e) {
            // $this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
@@ -90,15 +90,15 @@ class Query
      */
     public function writeDate($idOwner, $typeAction)
     {
-        $today = date("Y-m-d H:i:s");
+        $today = date('Y-m-d H:i:s');
         try {
-            $query = "INSERT INTO `bonusbase`.`date` (`id_person`,`type_action`,`date_action`) VALUES (:idOwner, :typeAction, :date);";
+            $query = 'INSERT INTO `bonusbase`.`date` (`id_person`,`type_action`,`date_action`) VALUES (:idOwner, :typeAction, :date);';
             $response = $this->conection->prepare($query);
             $response->execute(['idOwner' => $idOwner, 'typeAction' => $typeAction, 'date' => $today]);
             if ($response) {
-                return "Добавлено";
+                return 'Добавлено';
             } else {
-                return "Не добавлено";
+                return 'Не добавлено';
             }
         } catch (PDOException $e) {
            // $this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
@@ -176,13 +176,13 @@ class Query
     public function setStage($id_deal, $stage)
     {
         try {
-            $query = "INSERT INTO `bonusbase`.`stage` (`id_deal`,`bonus_stage`) VALUES (:id_deal, :stage);";
+            $query = 'INSERT INTO `bonusbase`.`stage` (`id_deal`,`bonus_stage`) VALUES (:id_deal, :stage);';
             $response = $this->conection->prepare($query);
             $response->execute(['id_deal' => $id_deal, 'stage' => $stage]);
             if ($response) {
-                return "Добавлено";
+                return 'Добавлено';
             } else {
-                return "Не добавлено";
+                return 'Не добавлено';
             }
         } catch (PDOException $e) {
             return $e->getMessage();
@@ -204,13 +204,13 @@ class Query
         $newBonuses = $dealValue/100 * $rule;
         $newBonuses += $oldBonuses;
         try {
-            $query = "UPDATE `bonusbase`.`bonus` SET bonus_discount =:new_value WHERE id_person =:id_person ;";
+            $query = 'UPDATE `bonusbase`.`bonus` SET bonus_discount =:new_value WHERE id_person =:id_person ;';
             $response = $this->conection->prepare($query);
             $response->execute(['new_value' => $newBonuses, 'id_person' => $id_owner]);
             if ($response) {
                 return $newBonuses;
             } else {
-                return "Не удалось записать бонусы";
+                return 'Не удалось записать бонусы';
             }
         } catch (PDOException $e) {
             return $e->getMessage();
@@ -246,13 +246,13 @@ class Query
     public function writeRemainsBonuses($id_owner, $bonuses)
     {
         try {
-            $query = "UPDATE `bonusbase`.`bonus` SET bonus_discount =:new_value WHERE id_person =:id_person ;";
+            $query = 'UPDATE `bonusbase`.`bonus` SET bonus_discount =:new_value WHERE id_person =:id_person ;';
             $response = $this->conection->prepare($query);
             $response->execute(['new_value' => $bonuses, 'id_person' => $id_owner]);
             if ($response) {
                 return $bonuses;
             } else {
-                return "Не удалось записать бонусы";
+                return 'Не удалось записать бонусы';
             }
         } catch (PDOException $e) {
             return $e->getMessage();

@@ -34,13 +34,13 @@ class ConnectDB
             $this->allBDTables = $columns;
             print_r($columns);
         } catch (PDOException $e) {
-            echo "Невозможно установить соединение с базой данных " . $e->getMessage();
+            echo 'Невозможно установить соединение с базой данных ' . $e->getMessage();
         }
     }
 
     /**
      * Получить соединение с БД
-     * @return - соединение с БД
+     * @return PDO - соединение с БД
      */
     public function getPDO()
     {
@@ -49,7 +49,7 @@ class ConnectDB
 
     /**
      * Получить таблицы БД
-     * @return - все таблицы в бд
+     * @return array - все таблицы в бд
      */
     public function getTables()
     {

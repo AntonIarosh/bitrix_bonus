@@ -6,9 +6,12 @@ namespace HttpInterface;
 
 include dirname(__DIR__) . './../vendor/autoload.php';
 
+use Bitrix24\SDK\Core\CoreBuilder;
 use Monolog\Logger;
+use Monolog\Processor\MemoryUsageProcessor;
 use Symfony\Component\HttpClient\HttpClient;
 use Monolog\Handler\StreamHandler;
+use Throwable;
 
 /**
  * Class MakePresent - Вычисление возможности прикрепление подарка, и его прикрепление
@@ -17,26 +20,28 @@ use Monolog\Handler\StreamHandler;
  */
 class MakePresent
 {
-    private $orderId;
-    private $idOvner;
-    private $opportunity;
+    private int $orderId;
+    private int $idOvner;
+    private float $opportunity;
     private $presents;
 
-    private $log;
+    private Logger $log;
 
     /**
      * OrderAllData constructor - Конструктор класса
      *
      * @param int $orderId - идентификатор заказа
+     * @param $opportunity - стоимость всего заказа
+     * @param $idOvner - идентификатор заказчика
      */
-    public function __construct($orderId, $opportunity, $idOvner)
+    public function __construct(int $orderId, $opportunity, $idOvner)
     {
         $this->orderId = $orderId;
         $this->opportunity = $opportunity;
         $this->idOvner = $idOvner;
         $this->log = new Logger('Present');
         $this->log->pushHandler(new StreamHandler('logs/present.log', Logger::DEBUG));
-        $this->log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
+        $this->log->pushProcessor(new MemoryUsageProcessor(true, true));
 
         $this->client = HttpClient::create(['http_version' => '2.0']);
     }
@@ -74,9 +79,9 @@ class MakePresent
     /**
      * Получить идентификатор заказа
      *
-     * @return - идентификатор заказа
+     * @return int - идентификатор заказа
      */
-    public function getOrderId()
+    public function getOrderId(): int
     {
         return $this->orderId;
     }
@@ -94,9 +99,9 @@ class MakePresent
     /**
      * Получить идентификатор заказчика
      *
-     * @return - идентификатор заказчика
+     * @return mixed - идентификатор заказчика
      */
-    public function getIdOrderOvner()
+    public function getIdOrderOvner(): int
     {
         return $this->idOvner;
     }
@@ -114,9 +119,9 @@ class MakePresent
     /**
      * Получить данные возможности сделки
      *
-     * @return - сумму сделки
+     * @return mixed - сумму сделки
      */
-    public function getOpportunity()
+    public function getOpportunity(): float
     {
         return $this->opportunity;
     }
@@ -127,16 +132,16 @@ class MakePresent
      *
      * @return array - все подарки
      */
-    public function calculatePresents()
+    public function calculatePresents(): array
     {
         try {
-            $core = (new \Bitrix24\SDK\Core\CoreBuilder())
+            $core = (new CoreBuilder())
                 ->withLogger($this->log)
                 ->withWebhookUrl('https://b24-r1mql2.bitrix24.ru/rest/1/yn57uv4t4npz440h/')
                 ->build();
 
             // Запрос всех продуктов
-            $res = $core->call('crm.product.list', ['order' => ["NAME" => "ASC"], 'select' => ['*', 'PROPERTY_*']]);
+            $res = $core->call('crm.product.list', ['order' => ['NAME' => 'ASC'], 'select' => ['*', 'PROPERTY_*']]);
             $arrayOrderData = $res->getResponseData()->getResult()->getResultData();
 
             $presents = [];
@@ -156,7 +161,7 @@ class MakePresent
             $this->setPresents($presents);
 
             return $presents;
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);
             print(sprintf('тип: %s', get_class($exception)) . PHP_EOL);
             print(sprintf('trace: %s', $exception->getTraceAsString()) . PHP_EOL);
@@ -171,7 +176,7 @@ class MakePresent
     public function makePresents($allpresents)
     {
         try {
-            $core = (new \Bitrix24\SDK\Core\CoreBuilder())
+            $core = (new CoreBuilder())
                 ->withLogger($this->log)
                 ->withWebhookUrl('https://b24-r1mql2.bitrix24.ru/rest/1/yn57uv4t4npz440h/')
                 ->build();
@@ -203,7 +208,7 @@ class MakePresent
             array_push($oldTablePart, $thisPresent);
             // Выполнение записи табличной части заказа в битрикс
             $res = $core->call('crm.deal.productrows.set', ['ID' => $this->getOrderId(), 'ROWS' => $oldTablePart]);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);
             print(sprintf('тип: %s', get_class($exception)) . PHP_EOL);
             print(sprintf('trace: %s', $exception->getTraceAsString()) . PHP_EOL);

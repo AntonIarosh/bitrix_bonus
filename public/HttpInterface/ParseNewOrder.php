@@ -18,11 +18,11 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ParseNewOrder
 {
-    private $orderId;
+    private int $orderId;
     private $orderData;
 
-    const DOC_ID_PLACE = 1;
-    const DOC_ID_PLACE_IN_ALL_IFO = 2;
+    public const DOC_ID_PLACE = 1;
+    public const DOC_ID_PLACE_IN_ALL_IFO = 2;
 
     /**
      * ParseNewOrder constructor - Конструктор класса
@@ -46,9 +46,9 @@ public function __construct($orderData = 0, $orderId = 0)
 
     /**
      * Получить идентификатор заказа
-     * @return - идентификатор заказа
+     * @return int - идентификатор заказа
      */
-    public function getOrderId()
+    public function getOrderId(): int
     {
         return $this->orderId;
     }
@@ -63,7 +63,7 @@ public function __construct($orderData = 0, $orderId = 0)
 
     /**
      * Получить данные заказа
-     * @return - данные заказа
+     * @return array|int - данные заказа
      */
     public function getOrderData()
     {
@@ -74,27 +74,27 @@ public function __construct($orderData = 0, $orderId = 0)
      * Получить из запроса данные и разобрать их
      * @return array - данные заказа
      */
-    public function makeOrderData()
+    public function makeOrderData(): array
     {
         $request = Request::createFromGlobals();
 
         $data = [];
 
-        $data["DocId"]  = $request->get("document_id");
-        $data["id"] = $data["DocId"][2];
+        $data['DocId']  = $request->get('document_id');
+        $data['id'] = $data['DocId'][2];
 
-        $requestParams = explode("_",$data["DocId"][self::DOC_ID_PLACE_IN_ALL_IFO]);
+        $requestParams = explode('_', $data['DocId'][self::DOC_ID_PLACE_IN_ALL_IFO]);
         $this->setOrderId($requestParams[self::DOC_ID_PLACE]);
-        $data["id"] = $this->getOrderId();
+        $data['id'] = $this->getOrderId();
 
         $allOrderData = new OrderAllData($this->getOrderId());
         $allOrderData->allOrderData();
-        $data["ID_CLIENT"] = $allOrderData->getIdOrderOvner();
-        $data["ID_STAGE"] = $allOrderData->getStage();
-        $data["Products"] = $allOrderData->getProducts();
-        $data["All_client_INFO"] = $allOrderData->getClientData();
-        $data["PRICE_ORDER"] = $allOrderData->getOpportunity();
-        $data["СКИДКА"] = $allOrderData->getOpportunity()/100*30;
+        $data['ID_CLIENT'] = $allOrderData->getIdOrderOvner();
+        $data['ID_STAGE'] = $allOrderData->getStage();
+        $data['Products'] = $allOrderData->getProducts();
+        $data['All_client_INFO'] = $allOrderData->getClientData();
+        $data['PRICE_ORDER'] = $allOrderData->getOpportunity();
+        $data['СКИДКА'] = $allOrderData->getOpportunity()/100*30;
 
         print_r($data);
         return $data;

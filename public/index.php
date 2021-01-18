@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
-require_once("HttpInterface/ParseNewOrder.php");
+require_once('HttpInterface/ParseNewOrder.php');
 
 require_once('./db/Query.php');
 require_once('db/ConnectDB.php');
 require_once('bonus/CalculateBonus.php');
-require_once("HttpInterface/MakePresent.php");
+require_once('HttpInterface/MakePresent.php');
 
 use HttpInterface\ParseNewOrder;
 use HttpInterface\MakePresent;
@@ -16,14 +16,21 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use db\Query;
 use bonus\CalculateBonus;
+use Monolog\Processor\IntrospectionProcessor;
+use Monolog\Processor\MemoryUsageProcessor;
+use Monolog\Processor\WebProcessor;
 use PHPUnit\Util\ErrorHandler;
 
 
 $log = new Logger('name');
-$log->pushHandler(new StreamHandler(dirname(__DIR__) . '/logs/webhook.log', Logger::DEBUG));
-$log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
-$log->pushProcessor(new \Monolog\Processor\WebProcessor());
-$log->pushProcessor(new \Monolog\Processor\IntrospectionProcessor());
+try {
+    $log->pushHandler(new StreamHandler(dirname(__DIR__) . '/logs/webhook.log', Logger::DEBUG));
+} catch (Exception $e) {
+    $log->debug('Ошибка - '). $e->getMessage();
+}
+$log->pushProcessor(new MemoryUsageProcessor(true, true));
+$log->pushProcessor(new WebProcessor());
+$log->pushProcessor(new IntrospectionProcessor());
 
 error_reporting(E_ALL);
 ini_set('error_reporting', 'E_ALL');
@@ -31,10 +38,10 @@ ini_set('log_errors', '1'); // включить лог ошибок
 ini_set('error_log', __DIR__ . '/log.txt'); // расположение лог-файла ошибок
 error_log('Hello, errors!'); // записать в лог-файл значение/строку
 
-$log->debug("Обращение к файлу");
+$log->debug('Обращение к файлу');
 $order = new ParseNewOrder();
 $dataRequest = $order->makeOrderData();
-$log->debug("Разбор запроса: ");
+$log->debug('Разбор запроса: ');
 $log->debug(
     'req',
     [
@@ -43,14 +50,14 @@ $log->debug(
 );
 
 if (class_exists('ConnectDB')) {
-    $log->debug("Класс ConnectDB");
+    $log->debug('Класс ConnectDB');
 } else {
-    $log->debug("Нет класса ConnectDB");
+    $log->debug('Нет класса ConnectDB');
 }
 if (class_exists('db\Query')) {
-    $log->debug("Класс Query");
+    $log->debug('Класс Query');
 } else {
-    $log->debug("Нет класса Query");
+    $log->debug('Нет класса Query');
 }
 
 $connection = new ConnectDB();
@@ -67,7 +74,7 @@ $person = new db\Query($pdo);
 switch ($dataRequest['ID_STAGE']) {
     case 'C1:NEW' :
     {
-        $log->debug("Проверка регистрации пользователя " . $dataRequest['ID_CLIENT']);
+        $log->debug('Проверка регистрации пользователя ' . $dataRequest['ID_CLIENT']);
 
         $respons = $person->isOwnerRegistred($dataRequest['ID_CLIENT']);
         $log->debug(
@@ -77,11 +84,11 @@ switch ($dataRequest['ID_STAGE']) {
             ]
         );
         if ($respons != null) {
-            $log->debug("Обработка пользователя :");
+            $log->debug('Обработка пользователя :');
             if ($respons == 0) {
-                $log->debug("Добавление пользователя:");
+                $log->debug('Добавление пользователя:');
                 $add = $person->addOwner($dataRequest['ID_CLIENT']);
-                $person->writeDate($dataRequest['ID_CLIENT'], "Register in system. 200 bonuses add.");
+                $person->writeDate($dataRequest['ID_CLIENT'], 'Register in system. 200 bonuses add.');
                 $log->debug(
                     'Пользователь добавлен в БД - ',
                     [
@@ -89,16 +96,16 @@ switch ($dataRequest['ID_STAGE']) {
                     ]
                 );
             } else {
-                $log->debug("Пользователь зарегистрирован :");
+                $log->debug('Пользователь зарегистрирован :');
             }
         } else {
-            $log->debug("Пользователь NULL - ");
+            $log->debug('Пользователь NULL - ');
         }
         break;
     }
     case 'C1:PREPAYMENT_INVOICE' :
     {
-        $log->debug("Разплачиваемся бонусами");
+        $log->debug('Разплачиваемся бонусами');
         $respons = $person->getBonusCount($dataRequest['ID_CLIENT']);
         $log->debug(
             'Этап скидки. Бонусов - ',
@@ -115,9 +122,9 @@ switch ($dataRequest['ID_STAGE']) {
         );
 
         if (class_exists('CalculateBonus')) {
-            $log->debug("Класс CalculateBonus");
+            $log->debug('Класс CalculateBonus');
         } else {
-            $log->debug("Нет класса CalculateBonus");
+            $log->debug('Нет класса CalculateBonus');
         }
 
         $stage = $person->setStage($dataRequest['id'], $dataRequest['ID_STAGE']);
@@ -129,21 +136,24 @@ switch ($dataRequest['ID_STAGE']) {
             ]
         );
 
-        $log->debug("Начинается вычисление и начисление бонусов :");
-        $bonusCalculator = new CalculateBonus($dataRequest['id']);
-        $bonusCalculator->setOpportunity($dataRequest['PRICE_ORDER']);
-        $bonusCalculator->setBonus($respons);
-        $bonusCalculator->setProducts($dataRequest['Products']);
-        $bonusCalculator->setIdOrderOwner($dataRequest['ID_CLIENT']);
-        $bonusCalculator->setDiscaountPersentage($discountPersent);
-        $newBonuses = $bonusCalculator->calculateAndDiscount();
-        $log->debug(
-            'Оставшиеся бонусы - ',
-            [
-                'Оставшиеся бонусы - ' => $newBonuses,
-            ]
-        );
-
+        $log->debug('Начинается вычисление и начисление бонусов :');
+        try {
+            $bonusCalculator = new CalculateBonus($dataRequest['id']);
+            $bonusCalculator->setOpportunity($dataRequest['PRICE_ORDER']);
+            $bonusCalculator->setBonus($respons);
+            $bonusCalculator->setProducts($dataRequest['Products']);
+            $bonusCalculator->setIdOrderOwner($dataRequest['ID_CLIENT']);
+            $bonusCalculator->setDiscaountPersentage($discountPersent);
+            $newBonuses = $bonusCalculator->calculateAndDiscount();
+            $log->debug(
+                'Оставшиеся бонусы - ',
+                [
+                    'Оставшиеся бонусы - ' => $newBonuses,
+                ]
+            );
+        } catch (Exception $e) {
+            $log->debug('Ошибка - '). $e->getMessage();
+        }
 
         $bonusesAfterWrite = $person->writeRemainsBonuses($dataRequest['ID_CLIENT'], $newBonuses);
         $log->debug(
@@ -152,14 +162,14 @@ switch ($dataRequest['ID_STAGE']) {
                 'Остатки записаны в бд - ' => $bonusesAfterWrite,
             ]
         );
-        $person->writeDate($dataRequest['ID_CLIENT'], "Bonuses are debited. Remains: " . $bonusesAfterWrite);
+        $person->writeDate($dataRequest['ID_CLIENT'], 'Bonuses are debited. Remains: ' . $bonusesAfterWrite);
 
 
         break;
     }
     case 'C1:WON' :
     {
-        $log->debug("Сделка завершена");
+        $log->debug('Сделка завершена');
         $respons = $person->getStage($dataRequest['id']);
         $log->debug(
             'Этап сделки - ',
@@ -194,9 +204,9 @@ switch ($dataRequest['ID_STAGE']) {
                     'Этап начисления. Добавлены - ' => $newBonuses,
                 ]
             );
-            $person->writeDate($dataRequest['ID_CLIENT'], "Add bonuses - " . $newBonuses);
+            $person->writeDate($dataRequest['ID_CLIENT'], 'Add bonuses - ' . $newBonuses);
         } else {
-            $log->debug("Была скидка, и бонусы начислять нельзя");
+            $log->debug('Была скидка, и бонусы начислять нельзя');
         }
         if ($dataRequest['PRICE_ORDER'] > 4000) {
             $present = new MakePresent($dataRequest['id'], $dataRequest['PRICE_ORDER'], $dataRequest['ID_CLIENT']);
@@ -209,7 +219,7 @@ switch ($dataRequest['ID_STAGE']) {
                 ]
             );
             $present->makePresents($present->getPresents());
-            $log->debug("Подарок добавлен");
+            $log->debug('Подарок добавлен');
         }
 
 

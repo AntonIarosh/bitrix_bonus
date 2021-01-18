@@ -6,9 +6,12 @@ namespace HttpInterface;
 
 include dirname(__DIR__) . './../vendor/autoload.php';
 
+use Bitrix24\SDK\Core\CoreBuilder;
 use Monolog\Logger;
+use Monolog\Processor\MemoryUsageProcessor;
 use Symfony\Component\HttpClient\HttpClient;
 use Monolog\Handler\StreamHandler;
+use Throwable;
 
 /**
  * Class OrderAllData - Данные по заказу
@@ -16,25 +19,25 @@ use Monolog\Handler\StreamHandler;
  */
 class OrderAllData
 {
-    private $orderId;
-    private $stage;
-    private $idOvner;
-    private $log;
+    private int $orderId;
+    private string $stage;
+    private int $idOvner;
+    private Logger $log;
     private $client;
     private $clientData;
     private $products;
-    private $opportunity;
+    private float $opportunity;
 
     /**
      * OrderAllData constructor - Конструктор класса
      * @param int $orderId - идентификатор заказа
      */
-    public function __construct($orderId)
+    public function __construct(int $orderId)
     {
         $this->orderId = $orderId;
         $this->log = new Logger('name');
         $this->log->pushHandler(new StreamHandler('logs/b24-api-client-debug.log', Logger::DEBUG));
-        $this->log->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor(true, true));
+        $this->log->pushProcessor(new MemoryUsageProcessor(true, true));
 
         $this->client = HttpClient::create(['http_version' => '2.0']);
     }
@@ -50,9 +53,9 @@ class OrderAllData
 
     /**
      * Получить идентификатор заказа
-     * @return - идентификатор заказа
+     * @return int - идентификатор заказа
      */
-    public function getOrderId()
+    public function getOrderId(): int
     {
         return $this->orderId;
     }
@@ -68,9 +71,9 @@ class OrderAllData
 
     /**
      * Получить стадию заказа
-     * @return - стадия заказа
+     * @return mixed - стадия заказа
      */
-    public function getStage()
+    public function getStage(): string
     {
         return $this->stage;
     }
@@ -86,9 +89,9 @@ class OrderAllData
 
     /**
      * Получить идентификатор заказчика
-     * @return - идентификатор заказчика
+     * @return mixed - идентификатор заказчика
      */
-    public function getIdOrderOvner()
+    public function getIdOrderOvner(): int
     {
         return $this->idOvner;
     }
@@ -104,7 +107,7 @@ class OrderAllData
 
     /**
      * Получить данные клиента
-     * @return - массив данных клиента
+     * @return mixed - массив данных клиента
      */
     public function getClientData()
     {
@@ -122,7 +125,7 @@ class OrderAllData
 
     /**
      * Получить данные продуктов сделки
-     * @return - массив табличной части сделки
+     * @return mixed - массив табличной части сделки
      */
     public function getProducts()
     {
@@ -140,9 +143,9 @@ class OrderAllData
 
     /**
      * Получить данные возможности сделки
-     * @return - сумму сделки
+     * @return mixed - сумму сделки
      */
-    public function getOpportunity()
+    public function getOpportunity(): float
     {
         return $this->opportunity;
     }
@@ -153,7 +156,7 @@ class OrderAllData
     public function allOrderData()
     {
         try {
-            $core = (new \Bitrix24\SDK\Core\CoreBuilder())
+            $core = (new CoreBuilder())
                 ->withLogger($this->log)
                 ->withWebhookUrl('https://b24-r1mql2.bitrix24.ru/rest/1/yn57uv4t4npz440h/')
                 ->build();
@@ -176,7 +179,7 @@ class OrderAllData
             $this->setProducts($res->getResponseData()->getResult()->getResultData());
             var_dump($this->getProducts());
 
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);
             print(sprintf('тип: %s', get_class($exception)) . PHP_EOL);
             print(sprintf('trace: %s', $exception->getTraceAsString()) . PHP_EOL);
