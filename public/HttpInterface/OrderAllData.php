@@ -19,32 +19,43 @@ use Throwable;
  */
 class OrderAllData
 {
-    private int $orderId;
-    private string $stage;
-    private int $idOvner;
-    private Logger $log;
-    private $client;
+    private $orderId;
+    private $stage;
+    private $idOwner;
+    private $log;
     private $clientData;
     private $products;
-    private float $opportunity;
+    private $opportunity;
 
     /**
      * OrderAllData constructor - Конструктор класса
-     * @param int $orderId - идентификатор заказа
+     * @param $orderId - идентификатор заказа
      */
-    public function __construct(int $orderId)
+    public function __construct(int $orderId, $log)
     {
         $this->orderId = $orderId;
-        $this->log = new Logger('name');
-        $this->log->pushHandler(new StreamHandler('logs/b24-api-client-debug.log', Logger::DEBUG));
-        $this->log->pushProcessor(new MemoryUsageProcessor(true, true));
+        $this->log = $log;
+    }
 
-        $this->client = HttpClient::create(['http_version' => '2.0']);
+    /**
+     * @return mixed
+     */
+    public function getLog()
+    {
+        return $this->log;
+    }
+
+    /**
+     * @param mixed $log
+     */
+    public function setLog($log)
+    {
+        $this->log = $log;
     }
 
     /**
      * Задать идентификатор заказа
-     * @param $id - идентификатор заказа
+     * @param - идентификатор заказа
      */
     public function setOrderId($id)
     {
@@ -53,9 +64,9 @@ class OrderAllData
 
     /**
      * Получить идентификатор заказа
-     * @return int - идентификатор заказа
+     * @return - идентификатор заказа
      */
-    public function getOrderId(): int
+    public function getOrderId()
     {
         return $this->orderId;
     }
@@ -73,27 +84,27 @@ class OrderAllData
      * Получить стадию заказа
      * @return mixed - стадия заказа
      */
-    public function getStage(): string
+    public function getStage()
     {
         return $this->stage;
     }
 
     /**
      * Задать идентификатор заказчика
-     * @param $idOvner - идентификатор заказчика
+     * @param $idOwner - идентификатор заказчика
      */
-    public function setIdOrderOvner($idOvner)
+    public function setIdOrderOwner($idOwner)
     {
-        $this->idOvner = $idOvner;
+        $this->idOwner = $idOwner;
     }
 
     /**
      * Получить идентификатор заказчика
      * @return mixed - идентификатор заказчика
      */
-    public function getIdOrderOvner(): int
+    public function getIdOrderOwner()
     {
-        return $this->idOvner;
+        return $this->idOwner;
     }
 
     /**
@@ -145,7 +156,7 @@ class OrderAllData
      * Получить данные возможности сделки
      * @return mixed - сумму сделки
      */
-    public function getOpportunity(): float
+    public function getOpportunity()
     {
         return $this->opportunity;
     }
@@ -166,18 +177,24 @@ class OrderAllData
 
             $arrayOrderData = $res->getResponseData()->getResult()->getResultData();
             print_r($arrayOrderData);
-            $this->setIdOrderOvner((int)$arrayOrderData['CONTACT_ID']);
+            $this->setIdOrderOwner((int)$arrayOrderData['CONTACT_ID']);
             $this->setStage($arrayOrderData['STAGE_ID']);
             $this->setOpportunity($arrayOrderData['OPPORTUNITY']);
 
             var_dump($res->getResponseData()->getResult()->getResultData());
 
-            $res = $core->call('crm.contact.get',['ID' => $this->idOvner]);
+            $res = $core->call('crm.contact.get',['ID' => $this->idOwner]);
             $this->setClientData($res->getResponseData()->getResult()->getResultData());
             var_dump($this->getClientData());
             $res = $core->call('crm.deal.productrows.get',['ID' => $this->orderId]);
             $this->setProducts($res->getResponseData()->getResult()->getResultData());
             var_dump($this->getProducts());
+            $this->log->debug(
+                'Полные данные',
+                [
+                    'Полные данные' => $this->getProducts(),
+                ]
+            );
 
         } catch (Throwable $exception) {
             print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);

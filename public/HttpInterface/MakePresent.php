@@ -21,8 +21,7 @@ use Throwable;
 class MakePresent
 {
     private int $orderId;
-    private int $idOvner;
-    private float $opportunity;
+    private int $idOwner;
     private $presents;
 
     private Logger $log;
@@ -31,19 +30,14 @@ class MakePresent
      * OrderAllData constructor - Конструктор класса
      *
      * @param int $orderId - идентификатор заказа
-     * @param $opportunity - стоимость всего заказа
      * @param $idOvner - идентификатор заказчика
+     * @param $log - лог
      */
-    public function __construct(int $orderId, $opportunity, $idOvner)
+    public function __construct(int $orderId, int $idOvner, $log)
     {
         $this->orderId = $orderId;
-        $this->opportunity = $opportunity;
-        $this->idOvner = $idOvner;
-        $this->log = new Logger('Present');
-        $this->log->pushHandler(new StreamHandler('logs/present.log', Logger::DEBUG));
-        $this->log->pushProcessor(new MemoryUsageProcessor(true, true));
-
-        $this->client = HttpClient::create(['http_version' => '2.0']);
+        $this->idOwner = $idOvner;
+        $this->log = $log;
     }
 
     /**
@@ -89,11 +83,11 @@ class MakePresent
     /**
      * Задать идентификатор заказчика
      *
-     * @param $idOvner - идентификатор заказчика
+     * @param $idOwner - идентификатор заказчика
      */
-    public function setIdOrderOvner($idOvner)
+    public function setIdOrderOwner($idOwner)
     {
-        $this->idOvner = $idOvner;
+        $this->idOwner = $idOwner;
     }
 
     /**
@@ -101,29 +95,9 @@ class MakePresent
      *
      * @return mixed - идентификатор заказчика
      */
-    public function getIdOrderOvner(): int
+    public function getIdOrderOwner(): int
     {
-        return $this->idOvner;
-    }
-
-    /**
-     * Задать данные возможности сделки
-     *
-     * @param $opportunity - возможности сделки
-     */
-    public function setOpportunity($opportunity)
-    {
-        $this->opportunity = $opportunity;
-    }
-
-    /**
-     * Получить данные возможности сделки
-     *
-     * @return mixed - сумму сделки
-     */
-    public function getOpportunity(): float
-    {
-        return $this->opportunity;
+        return $this->idOwner;
     }
 
 

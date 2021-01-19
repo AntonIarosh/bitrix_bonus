@@ -16,12 +16,13 @@
     "symfony/http-client": "5.*",
     "symfony/console": "5.*",
     "symfony/dotenv": "5.*",
-    "symfony/orm-pack": "^2.1"
+    "symfony/orm-pack": "^2.1",
+    "moneyphp/money": "^3.3"
   },
   "require-dev": {
     "phpstan/phpstan": "0.12.48",
     "roave/security-advisories": "dev-master",
-    "phpunit/phpunit": "9.5.*",
+    "phpunit/phpunit": "^9",
     "symfony/debug-bundle": "5.*",
     "symfony/maker-bundle": "^1.26",
     "mockery/mockery": "^1.4"

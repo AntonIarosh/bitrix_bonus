@@ -21,17 +21,16 @@ use function PHPUnit\Framework\isEmpty;
 class Query
 {
     private PDO $conection;
-
-    public const BONUS_FOR_NEW_OWNER = 200;
-    public const DEFAULT_RULE = 'default';
+    private $log;
 
     /**
      * ParseNewOrder constructor - Конструктор класса
      * @param $conection - соединение с базой данных
      */
-    public function __construct(PDO $conection)
+    public function __construct(PDO $conection, $log)
     {
         $this->conection = $conection;
+        $this->log = $log;
     }
 
     /**
@@ -59,14 +58,15 @@ class Query
      * Добавление пользователя в бонусную систему
      *
      * @param $idOwner - идентификатор пользователя
+     * @param $bonusForNewOwner - бонусы для нового клиента
      * @return false|mixed|null  - результат записи
      */
-    public function addOwner($idOwner)
+    public function addOwner($idOwner, $bonusForNewOwner)
     {
         try {
             $query = "INSERT INTO `bonusbase`.`bonus` (`id_person`,`bonus_discount`,`id_discound_persentage`) VALUES (:idOwner, :bonus_discount, '2');";
             $response = $this->conection->prepare($query);
-            $response->execute(['idOwner' => $idOwner, 'bonus_discount' => self::BONUS_FOR_NEW_OWNER]);
+            $response->execute(['idOwner' => $idOwner, 'bonus_discount' => $bonusForNewOwner]);
             if ($response) {
                // $this->log->debug("Пользователь добавлен");
                 return 'Добавлено';
@@ -130,13 +130,10 @@ class Query
      * Получение правил бонусной программы
      *
      * @param $nameRule - название правила
-     * @return mixed|string - процент скидки
+     * @return  - процент скидки
      */
-    public function getRule($nameRule = '')
+    public function getRule(string $nameRule)
     {
-        if (isEmpty($nameRule)) {
-            $nameRule = self::DEFAULT_RULE;
-        }
         try {
             $query = "SELECT persent AS 'rule' FROM bonusbase.discaunt_rule WHERE name=:nameRule";
             $response = $this->conection->prepare($query);
@@ -194,21 +191,17 @@ class Query
     /**
      * Начисление бонусов (нового значения бонусов) на счёт пользователя
      * @param $id_owner - идентификатор пользователя
-     * @param $dealValue - сумма всего заказа
-     * @param $rule - правило (процент) начисления бонусов от общей суммы всего заказа
-     * @param $oldBonuses - велечина бонусов до начисления, старое значение бонусов
+     * @param $bonuses - велечина бонусов после начисления, старое значение бонусов
      * @return string - значение увеличенных бонусов
      */
-    public function accrualBonuses($id_owner, $dealValue, $rule, $oldBonuses)
+    public function accrualBonuses($id_owner, $bonuses)
     {
-        $newBonuses = $dealValue/100 * $rule;
-        $newBonuses += $oldBonuses;
         try {
             $query = 'UPDATE `bonusbase`.`bonus` SET bonus_discount =:new_value WHERE id_person =:id_person ;';
             $response = $this->conection->prepare($query);
-            $response->execute(['new_value' => $newBonuses, 'id_person' => $id_owner]);
+            $response->execute(['new_value' => $bonuses, 'id_person' => $id_owner]);
             if ($response) {
-                return $newBonuses;
+                return $bonuses;
             } else {
                 return 'Не удалось записать бонусы';
             }

@@ -1,9 +1,15 @@
 <?php
+include dirname(__DIR__) . './../vendor/autoload.php';
+require_once 'CalculateBonus.php';
 
+use Monolog\Logger;
 use bonus\CalculateBonus;
 use PHPUnit\Framework\TestCase;
+use Monolog\Processor\MemoryUsageProcessor;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\FirePHPHandler;
 
-require_once 'CalculateBonus.php';
+
 
 /**
  * Тестовый класс для проверки расчёту бонусов.
@@ -12,8 +18,13 @@ require_once 'CalculateBonus.php';
  */
 class CalculateBonusTest extends TestCase
 {
-    public function testBonusCalculate()
+    public function testBonusCalculate(): void
     {
+        $log = new Logger('bonus');
+        $log->pushHandler(new StreamHandler(__DIR__ . '/test.log', Logger::DEBUG));
+        $log->pushHandler(new FirePHPHandler());
+        $log->pushProcessor(new MemoryUsageProcessor(true, true));
+        $log->info('My logger is now ready');
         // Запись текстовых данных в файл. - формирование табличной части заказа
         /* $log = new Logger('name');
           $log->pushHandler(new StreamHandler('logs/test.log', Logger::DEBUG));
@@ -40,23 +51,25 @@ class CalculateBonusTest extends TestCase
             $array[] = (array)$value;
         }
 
-        print_r($array);
+        //print_r($array);
 
-        $bonusCalculator = new CalculateBonus(1);
-        $bonusCalculator->setOpportunity(45);
-        $bonusCalculator->setBonus(100);
-        $bonusCalculator->setProducts($array);
-        $bonusCalculator->setIdOrderOwner(2);
-        $bonusCalculator->setDiscaountPersentage(30);
-        $newBonuses = $bonusCalculator->calculateAndDiscount();
+        $bonusCalculator = new CalculateBonus(1, 2, $array,
+                                              45, 100, 30, $log);
+        print_r($bonusCalculator->getNewTablePart());
         // Расчёт остатка бонусов
         // 45(стоимость сделки) / 100 * 30(макс процент скидки) = 13.5
         //100(все бонусы) - 13.5 = 86.5
-        $this->assertEquals(86.5, $newBonuses);
+        $this->assertEquals(86.5, $bonusCalculator->calculateAndDiscount());
     }
 
-    public function testOrderTablePartBonusCalculate()
+    public function testOrderTablePartBonusCalculate() : void
     {
+        $log = new Logger('bonus');
+        $log->pushHandler(new StreamHandler(__DIR__ . '/test.log', Logger::DEBUG));
+        $log->pushHandler(new FirePHPHandler());
+        $log->pushProcessor(new MemoryUsageProcessor(true, true));
+        $log->info('My logger is now ready');
+
         $fileName = 'content1.txt';
         $data = json_decode(file_get_contents($fileName));
         $array = [];
@@ -65,14 +78,15 @@ class CalculateBonusTest extends TestCase
         }
 
         print_r($array);
-
-        $bonusCalculator = new CalculateBonus(1);
-        $bonusCalculator->setOpportunity(45);
-        $bonusCalculator->setBonus(100);
-        $bonusCalculator->setProducts($array);
-        $bonusCalculator->setIdOrderOwner(2);
-        $bonusCalculator->setDiscaountPersentage(30);
-        $newBonuses = $bonusCalculator->calculateAndDiscount();
+        try {
+            $bonusCalculator = new CalculateBonus(
+                1, 2, $array,
+                45.2, 100, 30, $log
+            );
+        } catch (Exception $e) {
+            $log->info('Ошибка - '.$e->getMessage());
+        }
+        $bonusCalculator->calculateAndDiscount();
         // Расчёт остатка бонусов
         // 45(стоимость сделки) / 100 * 30(макс процент скидки) = 13.5
         // 20(стоимость первого товара в заказе) - 13.5 = 6.5
@@ -80,12 +94,18 @@ class CalculateBonusTest extends TestCase
         // Первый товар в заказе выбирается логикой алгоритма - если вся скидка,
         // не превышает цены каждого товара(в данном случае первого) товара
         // и остаётся ещё остаток - то вся скидка умещается в первом товаре.
+        //print_r($bonusCalculator->getNewTablePart());
         $this->assertEquals(13.5, $bonusCalculator->getNewTablePart()[0]['DISCOUNT_SUM']);
         $this->assertEquals(6.5, $bonusCalculator->getNewTablePart()[0]['PRICE_EXCLUSIVE']);
     }
 
-    public function testBonusCalculateBigOrder3positionLAstPositionIsLargest()
+    public function testBonusCalculateBigOrder3positionLAstPositionIsLargest() : void
     {
+        $log = new Logger('bonus');
+        $log->pushHandler(new StreamHandler(__DIR__ . '/test.log', Logger::DEBUG));
+        $log->pushHandler(new FirePHPHandler());
+        $log->pushProcessor(new MemoryUsageProcessor(true, true));
+        $log->info('My logger is now ready');
         // Запись текстовых данных в файл. - формирование табличной части заказа
         /* $log = new Logger('name');
          $log->pushHandler(new StreamHandler('logs/test.log', Logger::DEBUG));
@@ -112,14 +132,8 @@ class CalculateBonusTest extends TestCase
         }
 
         print_r($array);
-
-        $bonusCalculator = new CalculateBonus(1);
-        $bonusCalculator->setOpportunity(1028);
-        $bonusCalculator->setBonus(400);
-        $bonusCalculator->setProducts($array);
-        $bonusCalculator->setIdOrderOwner(1);
-        $bonusCalculator->setDiscaountPersentage(30);
-        $newBonuses = $bonusCalculator->calculateAndDiscount();
+        $bonusCalculator = new CalculateBonus(1, 1, $array,
+                                              1028, 400, 30, $log);
         // Расчёт остатка бонусов
         // 745(стоимость сделки) / 100 * 30(макс процент скидки) = 308.4
         // 400(все бонусы) - 308.4 = 91.6
@@ -129,9 +143,9 @@ class CalculateBonusTest extends TestCase
         // 25(стоимость второго товара в заказе) - 23,75(скидка)  = 1,25
         // 983(стоимость третьего товара в заказе) - 265,65(скидка)  = 717.35
 
-        print_r($bonusCalculator->getNewTablePart());
-        $this->assertEquals(91.6, $newBonuses);
 
+        $this->assertEquals(91.6, $bonusCalculator->calculateAndDiscount());
+        //print_r($bonusCalculator->getNewTablePart());
         $this->assertEquals(19, $bonusCalculator->getNewTablePart()[0]['DISCOUNT_SUM']);
         $this->assertEquals(1, $bonusCalculator->getNewTablePart()[0]['PRICE_EXCLUSIVE']);
 

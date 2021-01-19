@@ -7,6 +7,7 @@ namespace HttpInterface;
 include dirname(__DIR__) . './../vendor/autoload.php';
 require_once 'OrderAllData.php';
 
+use Monolog\Logger;
 use PhpParser\Error;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,27 +20,48 @@ use Symfony\Component\HttpFoundation\Response;
 class ParseNewOrder
 {
     private int $orderId;
-    private $orderData;
+    private Logger $log;
 
     public const DOC_ID_PLACE = 1;
     public const DOC_ID_PLACE_IN_ALL_IFO = 2;
 
     /**
      * ParseNewOrder constructor - Конструктор класса
+     * @param Logger $log - лог
      * @param int $orderId - идентификатор заказа
-     * @param array $orderData - данные заказа
      */
-public function __construct($orderData = 0, $orderId = 0)
+public function __construct(Logger $log, int $orderId = 0)
     {
+        $this->log = $log;
+        $this->log->debug(
+            'Неполные данные',
+            [
+                'Неполные данные' => 'Конструктор parse new order',
+            ]
+        );
         $this->orderId = $orderId;
-        $this->orderData = $orderData;
+    }
+    /**
+     * @return Logger
+     */
+    public function getLog(): Logger
+    {
+        return $this->log;
+    }
+
+    /**
+     * @param Logger $log
+     */
+    public function setLog(Logger $log): void
+    {
+        $this->log = $log;
     }
 
     /**
      * Задать идентификатор заказа
      * @param $id - идентификатор заказа
      */
-    public function setOrderId($id)
+    public function setOrderId(int $id)
     {
         $this->orderId = $id;
     }
@@ -51,23 +73,6 @@ public function __construct($orderData = 0, $orderId = 0)
     public function getOrderId(): int
     {
         return $this->orderId;
-    }
-    /**
-     * Задать данные заказа
-     * @param $orderData - данные заказа
-     */
-    public function setOrderData($orderData)
-    {
-        $this->orderData = $orderData;
-    }
-
-    /**
-     * Получить данные заказа
-     * @return array|int - данные заказа
-     */
-    public function getOrderData()
-    {
-        return $this->orderData;
     }
 
     /**
@@ -84,19 +89,30 @@ public function __construct($orderData = 0, $orderId = 0)
         $data['id'] = $data['DocId'][2];
 
         $requestParams = explode('_', $data['DocId'][self::DOC_ID_PLACE_IN_ALL_IFO]);
-        $this->setOrderId($requestParams[self::DOC_ID_PLACE]);
+        $this->setOrderId((int)$requestParams[self::DOC_ID_PLACE]);
         $data['id'] = $this->getOrderId();
+        $this->log->debug(
+            'Неполные данные',
+            [
+                'Неполные данные' => $data,
+            ]
+        );
 
-        $allOrderData = new OrderAllData($this->getOrderId());
+        $allOrderData = new OrderAllData($this->getOrderId(), $this->log);
         $allOrderData->allOrderData();
-        $data['ID_CLIENT'] = $allOrderData->getIdOrderOvner();
+        $this->setLog($allOrderData->getLog());
+        $data['ID_CLIENT'] = $allOrderData->getIdOrderOwner();
         $data['ID_STAGE'] = $allOrderData->getStage();
         $data['Products'] = $allOrderData->getProducts();
         $data['All_client_INFO'] = $allOrderData->getClientData();
         $data['PRICE_ORDER'] = $allOrderData->getOpportunity();
         $data['СКИДКА'] = $allOrderData->getOpportunity()/100*30;
-
-        print_r($data);
+        $this->log->debug(
+            'Возвращаемые данные',
+            [
+                'Возвращаемые' => $data,
+            ]
+        );
         return $data;
     }
 }
