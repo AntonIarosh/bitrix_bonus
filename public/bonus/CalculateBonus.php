@@ -202,11 +202,9 @@ class CalculateBonus
                 ]
             );
 
-            //$remains = 0;
             $currencies = new ISOCurrencies();
             $moneyParser = new DecimalMoneyParser($currencies);
             $remains = $moneyParser->parse('0', new Currency('RUB'));
-            // $allDiscount = 0;
             $allDiscount = $moneyParser->parse('0', new Currency('RUB'));
             $bonusMoney = $moneyParser->parse((string)$this->getBonus(), new Currency('RUB'));
             $discount_1 = $this->getOpportunity() / 100 * $this->getDiscountPercentage();
@@ -216,8 +214,8 @@ class CalculateBonus
                     'Простая скидка  - ' => $discount_1,
                 ]
             );
-            // Создаём объект Money\Currency - для вычисления скидки на весь заказ
 
+            // Создаём объект Money\Currency - для вычисления скидки на весь заказ
             $moneyOrder = $moneyParser->parse((string)$this->getOpportunity(), new Currency('RUB'));
             $discount = $moneyOrder->divide(100);
             $discount = $discount->multiply($this->getDiscountPercentage());
@@ -229,11 +227,9 @@ class CalculateBonus
                 ]
             );
             if (floatval($moneyFormatter->format($discount)) < $this->getBonus()) {
-                //$remains = $this->getBonus() - $discount;
                 $remains = $bonusMoney->subtract($discount);
                 $allDiscount = $discount;
             } else {
-                //$allDiscount = $this->getBonus();
                 $allDiscount = $bonusMoney;
             }
             $productsInfo = [];
@@ -256,7 +252,6 @@ class CalculateBonus
                 ]
             );
 
-            //$discountNumber = 0;
             $discountNumber = $moneyParser->parse('0', new Currency('RUB'));
             $tablePart = [];
             $oldTablePart = $this->getProducts();
@@ -269,22 +264,21 @@ class CalculateBonus
                     $oldTablePart[$i]['QUANTITY']
                 );
                 // Попытка записать всю скидку в текущию позицию
-                // if ($allDiscount < $oldTablePart[$i]['PRICE'] * $oldTablePart[$i]['QUANTITY']) {
                 if (floatval($moneyFormatter->format($allDiscount)) < floatval(
                         $moneyFormatter->format($moneyPriceForOneStringOfTablePartMulQuantity)
                     )) {
                     $divisionBonusForQuantity = $allDiscount->divide($oldTablePart[$i]['QUANTITY']);
-                    // $oldTablePart[$i]['DISCOUNT_SUM'] = $allDiscount / $oldTablePart[$i]['QUANTITY'];
+
                     $oldTablePart[$i]['DISCOUNT_SUM'] = $moneyFormatter->format($divisionBonusForQuantity);
-                    //$oldTablePart[$i]['PRICE_EXCLUSIVE'] = $oldTablePart[$i]['PRICE'] - $oldTablePart[$i]['DISCOUNT_SUM'];
+
                     $oldTablePart[$i]['PRICE_EXCLUSIVE'] = $moneyFormatter->format(
                         $moneyPriceForOneStringOfTablePart->subtract($divisionBonusForQuantity)
                     );
-                    //$allDiscount -= $oldTablePart[$i]['DISCOUNT_SUM'] * $oldTablePart[$i]['QUANTITY'];
+
                     $allDiscount = $allDiscount->subtract(
                         $divisionBonusForQuantity->multiply($oldTablePart[$i]['QUANTITY'])
                     );
-                    //$discountNumber += $oldTablePart[$i]['DISCOUNT_SUM'] * $oldTablePart[$i]['QUANTITY'];
+
                     $discountNumber = $discountNumber->add(
                         $divisionBonusForQuantity->multiply($oldTablePart[$i]['QUANTITY'])
                     );
@@ -294,7 +288,6 @@ class CalculateBonus
 
 
                 // Попытка делить скидку на все позиции
-                //$discountForOnePosition = $allDiscount / (count($oldTablePart) - $i);
                 $discountForOnePosition = $allDiscount->divide(count($oldTablePart) - $i);
                 $this->log->debug(
                     'скидка на эту строку тч - ',
@@ -304,7 +297,6 @@ class CalculateBonus
                         'позиция - ' => count($oldTablePart) - $i,
                     ]
                 );
-                //$pOld = $oldTablePart[$i]['PRICE'];
                 $pOld = $moneyParser->parse((string)$oldTablePart[$i]['PRICE'], new Currency('RUB'));
                 //Если стоимость какждого товара табличной части меньше чем сумма скидки на эту позицию табличной части
                 if (floatval($moneyFormatter->format($pOld)) < floatval(
@@ -320,7 +312,7 @@ class CalculateBonus
                     $divForQuantity = $pOld->divide($oldTablePart[$i]['QUANTITY']);
                     $divForPercents = $divForQuantity->divide(100);
                     $discountSum = $divForPercents->multiply(95);
-                    //$oldTablePart[$i]['DISCOUNT_SUM'] = ($pOld / $oldTablePart[$i]['QUANTITY']) / 100 * 95;
+
                     $oldTablePart[$i]['DISCOUNT_SUM'] = $moneyFormatter->format($discountSum);
                     $this->log->debug(
                         'Простая сумма скидки - ',
@@ -329,12 +321,11 @@ class CalculateBonus
                         ]
                     );
 
-                    //$oldTablePart[$i]['PRICE_EXCLUSIVE'] = $pOld - $oldTablePart[$i]['DISCOUNT_SUM'];
                     $oldTablePart[$i]['PRICE_EXCLUSIVE'] = $moneyFormatter->format($pOld->subtract($discountSum));
-                    //$discountNumber += $oldTablePart[$i]['DISCOUNT_SUM'];
+
                     $discountNumber = $discountNumber->add($discountSum);
                     $allDiscount = $allDiscount->subtract($discountSum->multiply($oldTablePart[$i]['QUANTITY']));
-                    //$allDiscount -= $oldTablePart[$i]['DISCOUNT_SUM'] * $oldTablePart[$i]['QUANTITY'];
+
                     $this->log->debug(
                         'Сумма всей скидки - ',
                         [
@@ -342,7 +333,6 @@ class CalculateBonus
                         ]
                     );
                     if ($i == count($oldTablePart) - 1) {
-                        //$remains += $allDiscount;
                         $remains = $remains->add($allDiscount);
                         $this->log->debug(
                             'Остатки бонусной суммы - ',
@@ -360,14 +350,14 @@ class CalculateBonus
                             'скидка - ' => $moneyFormatter->format($discountForOnePosition),
                         ]
                     );
-                    //$oldTablePart[$i]['DISCOUNT_SUM'] = $discountForOnePosition / $oldTablePart[$i]['QUANTITY'];
+
                     $devDiscountSum = $discountForOnePosition->divide($oldTablePart[$i]['QUANTITY']);
                     $oldTablePart[$i]['DISCOUNT_SUM'] = $moneyFormatter->format($devDiscountSum);
-                    //$oldTablePart[$i]['PRICE_EXCLUSIVE'] = $pOld - $oldTablePart[$i]['DISCOUNT_SUM'];
+
                     $oldTablePart[$i]['PRICE_EXCLUSIVE'] = $moneyFormatter->format($pOld->subtract($devDiscountSum));
-                    //$discountNumber += $oldTablePart[$i]['DISCOUNT_SUM'];
+
                     $discountNumber = $discountNumber->add($devDiscountSum);
-                    //$allDiscount -= $oldTablePart[$i]['DISCOUNT_SUM'] * $oldTablePart[$i]['QUANTITY'];
+
                     $allDiscount = $allDiscount->subtract($devDiscountSum->multiply($oldTablePart[$i]['QUANTITY']));
                     $this->log->debug(
                         'Сумма всей скидки - ',
@@ -397,9 +387,8 @@ class CalculateBonus
                 'Массив для записи - ',
                 ['Массив для записи - ' => $tablePart,]
             );
-            // Выполнение записи табличной части заказа в битрикс
             $this->setNewTablePart($tablePart);
-            //$res = $core->call('crm.deal.productrows.set', ['ID' => $this->getOrderId(), 'ROWS' => $tablePart]);
+
             $this->log->debug(
                 'Бонусы стали - ',
                 ['Бонусы стали - ' => $moneyFormatter->format($remains),]

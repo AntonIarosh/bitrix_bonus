@@ -26,13 +26,8 @@ use Monolog\Processor\WebProcessor;
 use PHPUnit\Util\ErrorHandler;
 use bonus\SellBonus;
 
-
 $log = new Logger('name');
-try {
-    $log->pushHandler(new StreamHandler(dirname(__DIR__) . '/logs/webhook.log', Logger::DEBUG));
-} catch (Exception $e) {
-    $log->debug('Ошибка - '). $e->getMessage();
-}
+$log->pushHandler(new StreamHandler(dirname(__DIR__) . '/logs/webhook.log', Logger::DEBUG));
 $log->pushProcessor(new MemoryUsageProcessor(true, true));
 $log->pushProcessor(new WebProcessor());
 $log->pushProcessor(new IntrospectionProcessor());
@@ -42,8 +37,8 @@ ini_set('error_reporting', 'E_ALL');
 ini_set('log_errors', '1'); // включить лог ошибок
 ini_set('error_log', __DIR__ . '/log.txt'); // расположение лог-файла ошибок
 error_log('Hello, errors!'); // записать в лог-файл значение/строку
-
 $log->debug('Обращение к файлу');
+
 $order = new ParseNewOrder($log);
 $dataRequest = $order->makeOrderData();
 $log->debug('Разбор запроса: ');
@@ -53,7 +48,6 @@ $log->debug(
         'req' => $dataRequest,
     ]
 );
-
 $connection = new ConnectDB();
 $pdo = $connection->getPDO();
 

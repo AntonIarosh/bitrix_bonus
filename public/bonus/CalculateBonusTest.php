@@ -81,7 +81,7 @@ class CalculateBonusTest extends TestCase
         try {
             $bonusCalculator = new CalculateBonus(
                 1, 2, $array,
-                45.2, 100, 30, $log
+                45, 100, 30, $log
             );
         } catch (Exception $e) {
             $log->info('Ошибка - '.$e->getMessage());
@@ -145,7 +145,6 @@ class CalculateBonusTest extends TestCase
 
 
         $this->assertEquals(91.6, $bonusCalculator->calculateAndDiscount());
-        //print_r($bonusCalculator->getNewTablePart());
         $this->assertEquals(19, $bonusCalculator->getNewTablePart()[0]['DISCOUNT_SUM']);
         $this->assertEquals(1, $bonusCalculator->getNewTablePart()[0]['PRICE_EXCLUSIVE']);
 
