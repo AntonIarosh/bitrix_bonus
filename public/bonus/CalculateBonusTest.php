@@ -1,14 +1,20 @@
 <?php
+
 include dirname(__DIR__) . './../vendor/autoload.php';
 require_once 'CalculateBonus.php';
 
 use Monolog\Logger;
 use bonus\CalculateBonus;
-use PHPUnit\Framework\TestCase;
 use Monolog\Processor\MemoryUsageProcessor;
+use PHPUnit\Framework\TestCase;
+
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\FirePHPHandler;
 
+use Money\Currencies\ISOCurrencies;
+use Money\Currency;
+use Money\Formatter\DecimalMoneyFormatter;
+use Money\Parser\DecimalMoneyParser;
 
 
 /**
@@ -51,10 +57,10 @@ class CalculateBonusTest extends TestCase
             $array[] = (array)$value;
         }
 
-        //print_r($array);
-
-        $bonusCalculator = new CalculateBonus(1, 2, $array,
-                                              45, 100, 30, $log);
+        $bonusCalculator = new CalculateBonus(
+            1, 2, $array,
+            45, 100, 30, $log
+        );
         print_r($bonusCalculator->getNewTablePart());
         // Расчёт остатка бонусов
         // 45(стоимость сделки) / 100 * 30(макс процент скидки) = 13.5
@@ -62,7 +68,7 @@ class CalculateBonusTest extends TestCase
         $this->assertEquals(86.5, $bonusCalculator->calculateAndDiscount());
     }
 
-    public function testOrderTablePartBonusCalculate() : void
+    public function testOrderTablePartBonusCalculate(): void
     {
         $log = new Logger('bonus');
         $log->pushHandler(new StreamHandler(__DIR__ . '/test.log', Logger::DEBUG));
@@ -84,7 +90,7 @@ class CalculateBonusTest extends TestCase
                 45, 100, 30, $log
             );
         } catch (Exception $e) {
-            $log->info('Ошибка - '.$e->getMessage());
+            $log->info('Ошибка - ' . $e->getMessage());
         }
         $bonusCalculator->calculateAndDiscount();
         // Расчёт остатка бонусов
@@ -99,7 +105,7 @@ class CalculateBonusTest extends TestCase
         $this->assertEquals(6.5, $bonusCalculator->getNewTablePart()[0]['PRICE_EXCLUSIVE']);
     }
 
-    public function testBonusCalculateBigOrder3positionLAstPositionIsLargest() : void
+    public function testBonusCalculateBigOrder3positionLAstPositionIsLargest(): void
     {
         $log = new Logger('bonus');
         $log->pushHandler(new StreamHandler(__DIR__ . '/test.log', Logger::DEBUG));
@@ -132,8 +138,10 @@ class CalculateBonusTest extends TestCase
         }
 
         print_r($array);
-        $bonusCalculator = new CalculateBonus(1, 1, $array,
-                                              1028, 400, 30, $log);
+        $bonusCalculator = new CalculateBonus(
+            1, 1, $array,
+            1028, 400, 30, $log
+        );
         // Расчёт остатка бонусов
         // 745(стоимость сделки) / 100 * 30(макс процент скидки) = 308.4
         // 400(все бонусы) - 308.4 = 91.6

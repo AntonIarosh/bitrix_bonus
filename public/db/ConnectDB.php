@@ -8,8 +8,6 @@ class ConnectDB
 {
     private PDO $pdo;
 
-    //private $allBDTables;
-
     /**
      * ConnectDB constructor - Конструктор класса
      */
@@ -22,13 +20,6 @@ class ConnectDB
                 'Jhbjy:333',
                 [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
             );
-
-           /* $query = 'SHOW TABLES;';
-            $ver = $this->pdo->query($query);
-            $tables = $ver->fetchAll();
-            $columns = array_column($tables,'Tables_in_bonusbase');
-            $this->allBDTables = $columns;
-            print_r($columns);*/
         } catch (PDOException $e) {
             echo 'Невозможно установить соединение с базой данных ' . $e->getMessage();
         }
@@ -43,14 +34,6 @@ class ConnectDB
         return $this->pdo;
     }
 
-    /**
-     * Получить таблицы БД
-     * @return array - все таблицы в бд
-     */
-   /* public function getTables()
-    {
-        return $this->allBDTables;
-    }*/
 }
 
 

@@ -129,9 +129,11 @@ switch ($dataRequest['ID_STAGE']) {
 
         $log->debug('Начинается вычисление и начисление бонусов :');
         try {
-            $bonusCalculator = new CalculateBonus((int)$dataRequest['id'], (int)$dataRequest['ID_CLIENT'], $dataRequest['Products'],
-                                                  $dataRequest['PRICE_ORDER'], (float)$respons, (int)
-                                                  $discountPersent, $log);
+            $bonusCalculator = new CalculateBonus(
+                (int)$dataRequest['id'], (int)$dataRequest['ID_CLIENT'], $dataRequest['Products'],
+                $dataRequest['PRICE_ORDER'], (float)$respons, (int)
+                $discountPersent, $log
+            );
 
             $newBonuses = $bonusCalculator->calculateAndDiscount();
             $seller = new \bonus\SellBonus((int)$dataRequest['id'], $bonusCalculator->getNewTablePart(), $log);
@@ -143,7 +145,7 @@ switch ($dataRequest['ID_STAGE']) {
                 ]
             );
         } catch (Exception $e) {
-            $log->debug('Ошибка - '). $e->getMessage();
+            $log->debug('Ошибка - ') . $e->getMessage();
         }
 
         $bonusesAfterWrite = $dbAgent->writeRemainsBonuses($dataRequest['ID_CLIENT'], $newBonuses);
@@ -200,7 +202,7 @@ switch ($dataRequest['ID_STAGE']) {
         } else {
             $log->debug('Была скидка, и бонусы начислять нельзя');
         }
-        if ($dataRequest['PRICE_ORDER'] > 4000) {
+        if ($dataRequest['PRICE_ORDER'] > $programs->getMaxOrderPrice()) {
             $present = new MakePresent((int)$dataRequest['id'], (int)$dataRequest['ID_CLIENT'], $log);
             $present->calculatePresents();
             $present->makePresents($present->getPresents());

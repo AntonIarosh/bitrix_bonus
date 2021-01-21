@@ -30,7 +30,7 @@ class ParseNewOrder
      * @param Logger $log - лог
      * @param int $orderId - идентификатор заказа
      */
-public function __construct(Logger $log, int $orderId = 0)
+    public function __construct(Logger $log, int $orderId = 0)
     {
         $this->log = $log;
         $this->log->debug(
@@ -41,6 +41,7 @@ public function __construct(Logger $log, int $orderId = 0)
         );
         $this->orderId = $orderId;
     }
+
     /**
      * @return Logger
      */
@@ -85,18 +86,12 @@ public function __construct(Logger $log, int $orderId = 0)
 
         $data = [];
 
-        $data['DocId']  = $request->get('document_id');
+        $data['DocId'] = $request->get('document_id');
         $data['id'] = $data['DocId'][2];
 
         $requestParams = explode('_', $data['DocId'][self::DOC_ID_PLACE_IN_ALL_IFO]);
         $this->setOrderId((int)$requestParams[self::DOC_ID_PLACE]);
         $data['id'] = $this->getOrderId();
-        $this->log->debug(
-            'Неполные данные',
-            [
-                'Неполные данные' => $data,
-            ]
-        );
 
         $allOrderData = new OrderAllData($this->getOrderId(), $this->log);
         $allOrderData->allOrderData();
@@ -106,13 +101,7 @@ public function __construct(Logger $log, int $orderId = 0)
         $data['Products'] = $allOrderData->getProducts();
         $data['All_client_INFO'] = $allOrderData->getClientData();
         $data['PRICE_ORDER'] = $allOrderData->getOpportunity();
-        $data['СКИДКА'] = $allOrderData->getOpportunity()/100*30;
-        $this->log->debug(
-            'Возвращаемые данные',
-            [
-                'Возвращаемые' => $data,
-            ]
-        );
+        $data['СКИДКА'] = $allOrderData->getOpportunity() / 100 * 30;
         return $data;
     }
 }

@@ -15,12 +15,20 @@ include dirname(__DIR__) . './../vendor/autoload.php';
 class BonusAndDiscountPrograms
 {
     private int $bonusForNewOwner;
+    private int $maxOrderPrice;
 
     private string $rule;
 
-    public function __construct(int $bonusForNewOwner = 200, string  $rule = 'default')
+    /**
+     * BonusAndDiscountPrograms constructor.
+     * @param int $bonusForNewOwner - количество бонусов которые получает клиент при регистрации
+     * @param int $maxOrderPrice - максимальную стоимость заказа допускающую к вручению подарка
+     * @param string $rule - название правила(программы) которое содержит процент скидки с заказа
+     */
+    public function __construct(int $bonusForNewOwner = 200, $maxOrderPrice = 4000, string $rule = 'default')
     {
         $this->bonusForNewOwner = $bonusForNewOwner;
+        $this->maxOrderPrice = $maxOrderPrice;
         $this->rule = $rule;
     }
 
@@ -62,5 +70,25 @@ class BonusAndDiscountPrograms
     public function setRule(string $rule): void
     {
         $this->rule = $rule;
+    }
+
+    /**
+     * Получить максимальную стоимость заказа допускающую к вручению подарка
+     *
+     * @return int - максимальную стоимость заказа
+     */
+    public function getMaxOrderPrice(): int
+    {
+        return $this->maxOrderPrice;
+    }
+
+    /**
+     * Задать максимальную стоимость заказа допускающую к вручению подарка
+     *
+     * @param int $maxOrderPrice - максимальную стоимость заказа
+     */
+    public function setMaxOrderPrice(int $maxOrderPrice): void
+    {
+        $this->maxOrderPrice = $maxOrderPrice;
     }
 }

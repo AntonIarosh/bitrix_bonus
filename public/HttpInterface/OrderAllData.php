@@ -173,7 +173,7 @@ class OrderAllData
                 ->build();
 
 
-            $res = $core->call('crm.deal.get',['ID'=>$this->orderId]);
+            $res = $core->call('crm.deal.get', ['ID' => $this->orderId]);
 
             $arrayOrderData = $res->getResponseData()->getResult()->getResultData();
             print_r($arrayOrderData);
@@ -183,19 +183,12 @@ class OrderAllData
 
             var_dump($res->getResponseData()->getResult()->getResultData());
 
-            $res = $core->call('crm.contact.get',['ID' => $this->idOwner]);
+            $res = $core->call('crm.contact.get', ['ID' => $this->idOwner]);
             $this->setClientData($res->getResponseData()->getResult()->getResultData());
             var_dump($this->getClientData());
-            $res = $core->call('crm.deal.productrows.get',['ID' => $this->orderId]);
+            $res = $core->call('crm.deal.productrows.get', ['ID' => $this->orderId]);
             $this->setProducts($res->getResponseData()->getResult()->getResultData());
             var_dump($this->getProducts());
-            $this->log->debug(
-                'Полные данные',
-                [
-                    'Полные данные' => $this->getProducts(),
-                ]
-            );
-
         } catch (Throwable $exception) {
             print(sprintf('ошибка: %s', $exception->getMessage()) . PHP_EOL);
             print(sprintf('тип: %s', get_class($exception)) . PHP_EOL);

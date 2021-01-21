@@ -46,10 +46,8 @@ class Query
             $response = $this->conection->prepare($query);
             $response->execute(['idOwner' => $idOwner]);
             $data = $response->fetch()['exist'];
-            //$this->log->debug("Проверка пользователя: ". $idOwner. " - ".$data);
             return $data;
         } catch (PDOException $e) {
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
             return $e->getMessage();
         }
     }
@@ -68,16 +66,12 @@ class Query
             $response = $this->conection->prepare($query);
             $response->execute(['idOwner' => $idOwner, 'bonus_discount' => $bonusForNewOwner]);
             if ($response) {
-               // $this->log->debug("Пользователь добавлен");
                 return 'Добавлено';
             } else {
-               // $this->log->debug("Пользователь не добавлен");
                 return 'Не добавлено';
             }
         } catch (PDOException $e) {
-           // $this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
             return $e->getMessage();
-
         }
     }
 
@@ -101,7 +95,6 @@ class Query
                 return 'Не добавлено';
             }
         } catch (PDOException $e) {
-           // $this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
             return $e->getMessage();
         }
     }
@@ -122,7 +115,6 @@ class Query
             return $response->fetch()['bonus'];
         } catch (PDOException $e) {
             return $e->getMessage();
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
 
@@ -141,7 +133,6 @@ class Query
             return $response->fetch()['rule'];
         } catch (PDOException $e) {
             return $e->getMessage();
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
 
@@ -160,7 +151,6 @@ class Query
             return $response->fetch()['stage'];
         } catch (PDOException $e) {
             return $e->getMessage();
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
 
@@ -183,7 +173,6 @@ class Query
             }
         } catch (PDOException $e) {
             return $e->getMessage();
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
 
@@ -207,7 +196,6 @@ class Query
             }
         } catch (PDOException $e) {
             return $e->getMessage();
-                    //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
 
@@ -226,7 +214,6 @@ class Query
             return $response->fetch()['persent'];
         } catch (PDOException $e) {
             return $e->getMessage();
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
 
@@ -249,7 +236,6 @@ class Query
             }
         } catch (PDOException $e) {
             return $e->getMessage();
-            //$this->log->debug("Ошибка выполнения запроса : ". $e->getMessage(). "Идентификатор пользователя : ".$idOwner);
         }
     }
 }

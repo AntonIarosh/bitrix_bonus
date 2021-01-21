@@ -126,12 +126,7 @@ class MakePresent
                     array_push($presents, $value);
                 }
             }
-            $this->log->debug(
-                '[v] - ',
-                [
-                    '[v] ' => $presents,
-                ]
-            );
+
             $this->setPresents($presents);
 
             return $presents;

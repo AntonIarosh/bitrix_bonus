@@ -1,4 +1,5 @@
 <?php
+
 include dirname(__DIR__) . './../vendor/autoload.php';
 require_once 'CalculateDiscount.php';
 
@@ -11,7 +12,6 @@ use PHPUnit\Framework\TestCase;
 use Monolog\Processor\MemoryUsageProcessor;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\FirePHPHandler;
-
 
 
 /**
@@ -49,7 +49,6 @@ class CalculateDiscountTest extends TestCase
         $discountCalculator = new \bonus\CalculateDiscount($dealValue, $rule, $oldBonus, $this->log);
 
         $this->assertSame(floatval($moneyFormatter->format($newBonus)), $discountCalculator->accrualBonuses());
-
     }
 
     /**
